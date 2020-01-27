@@ -38,8 +38,7 @@ def gen_struct(rad):
         for x in range(0, rad):
             #If distance from 0,0 is greater than rad
             if np.linalg.norm([x,y]) > rad:
-                #Set as 1
-                print("d")
+                #Set as 0
                 struct_4th[x,y] = False
     #Rotate to form 2nd quadrant
     struct_2nd = np.rot90(struct_4th)
