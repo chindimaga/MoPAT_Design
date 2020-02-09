@@ -2,9 +2,9 @@
 #Configuration space generator
 
 #Import libraries
-from scipy import ndimage
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import ndimage
 
 #Generator function
 def gen_config(map, rad):
