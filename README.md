@@ -1,20 +1,25 @@
 # MoPAT_Design
 
-## Work left until TechEvince -
+The work initially started to serve as an additional learning "equipment" to the Robotics Club for swarm robotics and mobile robotics tests.
 
-1. Multi-touch Web UI - Rahul and Rajnessh
-2. Multi-TCP Connection - Done
-3. Multi-TCP Data transmission and reception and decoding
-4. ArUco marker detection and feedback - Okay
-5. Web-UI and Controller intergration -
-6. Controller algo in nodemcu - Rajneesh
-7. 5 Bots assembly - Okay
-8. Layer Architecture
+The system will reduce the whole trouble of tracking and control, an environment where one will just place the robots, use some simple functions to get position and motion data and voila, just implement your algorithm that you have taken so much time to develop.
 
-## Work after TechEvince -
+~~ The work was stalled due to the Covid-19 situation ~~
 
-1. Autoconnect feature
-2. NEAT Algorithm
-3. RFD Algorithm
-4. Formation Control Algorithm
-5. LED Based Localization
+> With newfound motivation I plan to work on it again
+
+## Work to be done until college reopens -
+
+1. Multi-touch Web UI
+2. Multi-TCP server
+3. Ideation of the layered control structure
+4. NEAT algorithm implementation
+5. RFD algorithm implementation
+6. Formation control algorithm
+7. Motor Schemas based algorithm
+8. Robot convex hull generator
+9. Static config space generator
+10. Multi Robot coordinator
+11. Motion Planning algorithms
+12. Task Planning algorithms
+13. Path Tracking algorithms

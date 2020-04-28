@@ -2,11 +2,11 @@
 #include <ESP8266WiFi.h>
 
 //Set ssid and password
-const char* ssid = "POCO";
-const char* pass = "kkkkkkkk";
+const char* ssid = "J";
+const char* pass = "Jaysable3";
 
 //Server IP add and port
-const char* addr = "192.168.43.116";
+const char* addr = "172.20.10.3";
 const uint16_t port = 65431;
 
 //Temp variables
@@ -46,14 +46,14 @@ void loop()
   for(int i=0; i<3; i++)
   {
     //Get data from server
-//    while(client.available())
-//    {
-//      data = static_cast<String>(client.readString());
-//      Serial.println(data);
-//    }
-    if (client.connected()) {
-        client.println("hello from ESP8266");
-      }
+    while(client.available())
+    {
+      data = static_cast<String>(client.readString());
+      Serial.println(data);
+    }
+//    if (client.connected()) {
+//        client.println("hello from ESP8266");
+//      }
     delay(1000);
   }
   client.stop();

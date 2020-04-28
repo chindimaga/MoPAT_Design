@@ -3,7 +3,7 @@ import socket
 import time
 
 HOST = '172.20.10.3'  # Standard loopback interface address (localhost)
-PORT = 10002       # Port to listen on (non-privileged ports are > 1023)
+PORT = 65431      # Port to listen on (non-privileged ports are > 1023)
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind((HOST, PORT))
