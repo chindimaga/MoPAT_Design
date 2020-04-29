@@ -4,7 +4,7 @@ The work initially started to serve as an additional learning "equipment" to the
 
 The system will reduce the whole trouble of tracking and control, an environment where one will just place the robots, use some simple functions to get position and motion data and voila, just implement your algorithm that you have taken so much time to develop.
 
-~~ The work was stalled due to the Covid-19 situation ~~
+~~The work was stalled due to the Covid-19 situation~~
 
 > With newfound motivation I plan to work on it again
 
