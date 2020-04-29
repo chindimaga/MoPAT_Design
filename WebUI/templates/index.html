@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Dumb Things</title>
+    <link href="static/bootstrap.min.css" rel="stylesheet">
+    
+    <link href="static/small-business.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="static/style.css">
+
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="row clearfix">
+            <span id="answer_reaction"> </span>
+            <div id="digit_form" style="display: block;">
+                <button type="button" class="btn btn-default butt"
+                    onclick="submit_correct_digit()">Submit</button>
+            </div>
+            <p><strong> click anywhere inside the canvas</strong></p>
+            <canvas id="touch_here" width="1200" height="750" style="border:1px solid #0b0c0c;" onclick="showCoords(event)">
+            </canvas>
+        </div>
+    </div>
+    <script src="static/jquery.js"></script>
+    <script src="static/bootstrap.min.js"></script>
+    <script src="static/myscript.js"></script>
+</body>
+
+</html>
