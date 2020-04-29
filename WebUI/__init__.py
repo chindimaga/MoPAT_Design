@@ -3,4 +3,4 @@ from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
 CORS(app, headers=['Content-Type'])
-from dododo import routes
+from WebUI import routes
