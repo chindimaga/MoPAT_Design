@@ -11,7 +11,7 @@ import random
 
 #Funtion to create a ball
 def add_ball(space):
-    mass = 1
+    mass = 5
     radius = 20
     #Set the moment of inertial for a ball - predefined for ball
     moment = pymunk.moment_for_circle(mass, 0, radius)
@@ -20,8 +20,9 @@ def add_ball(space):
     #Set a position
     x = random.randint(120,380)
     body.position = x, 550
+    body.friction = 1
     #Create the collision mask basically called shape here
-    shape = pymunk.Circle(body, radius)
+    shape = pymunk.Poly.create_box(body, (50,50), 0.0)
     #Add the body and its shape to the simulation
     space.add(body, shape)
     return shape
@@ -66,11 +67,30 @@ def add_L(space):
                                             (0,0), (0,0))
     #Create a slidejoint between body and rotation_center_body
     #joint_limit defines the min and max the body will slide wrt to each other
-    joint_limit = 10
+    joint_limit = 50
     rotation_limit_joint = pymunk.SlideJoint(body, rotation_limit_body,
                                              (-150,0), (0,0), 0, joint_limit)
     space.add(l1, l2, body, rotation_center_joint, rotation_limit_joint)
     return l1,l2
+
+#Add a box shaped robot
+def add_robot(space, pos):
+    '''
+    Function to generate bots
+    space : pymunk space object
+    posx  : (posx, posy) tuple
+    '''
+    #Create robot body
+    body = pymunk.Body(1, 200)                          #mass, moment
+    #Set body properties
+    body.position = pos[0], pos[1]
+    body.elasticity = 0
+    body.friction = 0.7
+    #Create shape/collision hull
+    shape = pymunk.Poly.create_box(body, (50,50), 0.0)  #body, size, border
+    #Add the space object
+    space.add(body, shape)
+    return shape
 
 #Main function
 def main():
@@ -103,7 +123,8 @@ def main():
         ticks_to_next_ball -= 1
         if ticks_to_next_ball <= 0:
             ticks_to_next_ball = 10
-            ball_shape = add_ball(space)
+            # ball_shape = add_ball(space)
+            ball_shape = add_robot(space, (200,550))
             balls.append(ball_shape)
 
         #Remove balls slowly
