@@ -6,13 +6,13 @@ The system will reduce the whole trouble of tracking and control, an environment
 
 ~~The work was stalled due to the Covid-19 situation~~
 
-> With newfound motivation I plan to work on it again
+> With newfound motivation we planned to work on it again
 
 ## Work to be done until college reopens -
 
-1. Multi-touch Web UI
+~~1. Multi-touch Web UI~~
 2. Multi-TCP server
-3. Ideation of the layered control structure
+~~3. Ideation of the layered control structure~~
 4. NEAT algorithm implementation
 5. RFD algorithm implementation
 6. Formation control algorithm

@@ -7,28 +7,33 @@ import pygame
 from pygame.locals import *
 import pymunk
 from pymunk import pygame_util
+import numpy as np
 
 #Add a box shaped robot
-def add_robot(space, pos):
+def add_robot(space, pos, col):
     '''
     Function to generate bots
     Arguments:
         space   : pymunk space object
         pos     : (posx, posy) tuple
+        col     : string color name
     Returns:
         shape   : robot shape
     '''
-    #Create robot body
-    body = pymunk.Body(1, 200)                          #mass, moment
+    #Create robot main body
+    body = pymunk.Body(1, pymunk.moment_for_box(1, (50,50)))
     #Set body properties
     body.position = pos
     body.elasticity = 0
-    body.friction = 0.7
+    body.friction = 1
     #Create shape/collision hull
-    shape = pymunk.Poly.create_box(body, (50,50), 0.0)  #body, size, border
+    shape = pymunk.Poly.create_box(body, (50,50), radius = 3.0)
+    shape.color = pygame.color.THECOLORS[col]
+    heading = pymunk.Circle(body, 5, offset = (0,20))
+    heading.color = pygame.color.THECOLORS["grey"]
     #Add the object
-    space.add(body, shape)
-    return shape
+    space.add(body, shape, heading)
+    return body
 
 """ NEED TO ADD BOUNDARY CONDITIONS AND CENTER OFFSET"""
 #Add a box shaped static obstacle
@@ -47,9 +52,13 @@ def add_static_obstacle(space, pos, size):
     body.position = pos
     #Create box shape
     shape = pymunk.Poly.create_box(body, size, 0.0)
+    shape.color = pygame.color.THECOLORS["white"]
     #Add the object
     space.add(body, shape)
     return shape
+
+def move(body, gravity, damping, dt, vel):
+    pymunk.Body.update_velocity(body, vel, damping, dt)
 
 #Generate random map
 def genrate_map():
@@ -59,11 +68,18 @@ def genrate_map():
 class Agent:
     #Create the robot shape
     def __init__(self, index, space, pos):
-        self.shape = add_robot(space, pos)
-    #Get shape data
-    def get_shape(self):
-        return self.shape
+        self.body = add_robot(space, pos, "red")
+    #Get body data
+    def get_body(self):
+        return self.body
     #Robot manual controller
+    def man_controller(self, index):
+        #Controls position
+        print("Man_controller running")
+        for event in pygame.event.get():
+            print("event")
+
+
     #Robot config space generator
     #Robot motion planning
     #Robot motion controller
@@ -80,32 +96,46 @@ def simulation():
     screen = pygame.display.set_mode((1000,1000))
     draw_options = pymunk.pygame_util.DrawOptions(screen)
     clock = pygame.time.Clock()
-
     #Create space
     space = pymunk.Space()
-    space.gravity = (0.0,-100.0)
-    #Generate a robot
-    robot_shape = add_robot(space, (100,100))
 
     #Create agent objects
     robot1 = Agent(1, space, (500,500))
-    robot2 = Agent(2, space, (300,500))
-    robot3 = Agent(3, space, (700,500))
-    draw_options.color_for_shape(robot1.get_shape())
-    draw_options.shape_dynamic_color = (255,255,255,255)
-    draw_options.color_for_shape(robot2.get_shape())
-    draw_options.shape_dynamic_color = (0,255,255,255)
+    body = robot1.get_body()
     #Add an obstacle
-    # obstacle_shape = add_static_obstacle(space, (500,200), (500,50))
+    obstacle_shape = add_static_obstacle(space, (500,200), (500,50))
 
     #Simulator loop
     while True:
         #Exiting the simulator
         for event in pygame.event.get():
             if event.type == QUIT:
+                print("Exiting simulation")
                 sys.exit(0)
             elif event.type == KEYDOWN and (event.key in [K_ESCAPE, K_q]):
+                print("Exiting simulation")
                 sys.exit(0)
+            if event.type == KEYDOWN:
+                print(body.angle)
+                if event.key == K_w:
+                    print("W pressed")
+                    body.velocity = (-100*np.sin(body.angle),100*np.cos(body.angle))
+                elif event.key == K_s:
+                    print("S pressed")
+                    body.velocity = (100*np.sin(body.angle),-100*np.cos(body.angle))
+                    print(body.velocity)
+                elif event.key == K_a:
+                    print("A pressed")
+                    body.angular_velocity = 1
+                elif event.key == K_d:
+                    print("D pressed")
+                    body.angular_velocity = -1
+            else:
+                body.velocity = (0,0)
+                body.angular_velocity = 0
+
+        #Run controller in the simulation loop
+        # robot1.man_controller(1)
 
         #Show the space
         screen.fill((0,0,0))                        #background - black
