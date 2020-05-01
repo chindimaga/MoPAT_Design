@@ -29,6 +29,7 @@ def add_robot(space, pos, col):
     #Create shape/collision hull
     shape = pymunk.Poly.create_box(body, (50,50), radius = 3.0)
     shape.color = pygame.color.THECOLORS[col]
+    #Show heading side
     heading = pymunk.Circle(body, 5, offset = (0,20))
     heading.color = pygame.color.THECOLORS["grey"]
     #Add the object
@@ -49,20 +50,34 @@ def add_static_obstacle(space, pos, size):
     '''
     #Create static body
     body = pymunk.Body(body_type = pymunk.Body.STATIC)
-    body.position = pos
+    body.position = pos[0] + size[0]/2, pos[1] + size[1]/2
+    if body.position[0] < 0 or body.position[1] < 0: return 0
     #Create box shape
     shape = pymunk.Poly.create_box(body, size, 0.0)
     shape.color = pygame.color.THECOLORS["white"]
     #Add the object
     space.add(body, shape)
-    return shape
 
 def move(body, gravity, damping, dt, vel):
     pymunk.Body.update_velocity(body, vel, damping, dt)
 
 #Generate random map
-def genrate_map():
+def generate_random_map():
     return 0
+
+#Generate test map
+def generate_test_map(space):
+    #Create borders
+    add_static_obstacle(space, (0,0), (10,1000))
+    add_static_obstacle(space, (0,0), (1000,10))
+    add_static_obstacle(space, (990,0), (10,1000))
+    add_static_obstacle(space, (0,990), (1000,10))
+    #Create random obstacles
+    add_static_obstacle(space, (150,10), (50,800))
+    add_static_obstacle(space, (150,810), (150,50))
+    add_static_obstacle(space, (750,500), (50,500))
+    add_static_obstacle(space, (500,200), (50,700))
+    add_static_obstacle(space, (500,150), (300,50))
 
 #Agent class
 class Agent:
@@ -100,10 +115,10 @@ def simulation():
     space = pymunk.Space()
 
     #Create agent objects
-    robot1 = Agent(1, space, (500,500))
+    robot1 = Agent(1, space, (80,80))
     body = robot1.get_body()
     #Add an obstacle
-    obstacle_shape = add_static_obstacle(space, (500,200), (500,50))
+    generate_test_map(space)
 
     #Simulator loop
     while True:
@@ -116,14 +131,12 @@ def simulation():
                 print("Exiting simulation")
                 sys.exit(0)
             if event.type == KEYDOWN:
-                print(body.angle)
                 if event.key == K_w:
                     print("W pressed")
                     body.velocity = (-100*np.sin(body.angle),100*np.cos(body.angle))
                 elif event.key == K_s:
                     print("S pressed")
                     body.velocity = (100*np.sin(body.angle),-100*np.cos(body.angle))
-                    print(body.velocity)
                 elif event.key == K_a:
                     print("A pressed")
                     body.angular_velocity = 1
