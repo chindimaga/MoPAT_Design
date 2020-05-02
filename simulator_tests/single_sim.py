@@ -14,12 +14,13 @@ from threading import Thread
 
 #Global variables
 screen_size = (500,500)
+goal = (450,450)        #Pymunk coords
 
 #MoPAT files
 import config_space
 from MOPAT_astar import Astar
 
-#Add a box shaped robot
+#Add a circle shaped robot
 def add_robot(space, pos, col):
     '''
     Function to generate bots
@@ -31,13 +32,13 @@ def add_robot(space, pos, col):
         shape   : robot shape
     '''
     #Create robot main body
-    body = pymunk.Body(1, pymunk.moment_for_box(1, (20,20)))
+    body = pymunk.Body(1, pymunk.moment_for_circle(1, 0, 12))
     #Set body properties
     body.position = pos
     body.elasticity = 0
     body.friction = 1
     #Create shape/collision hull
-    shape = pymunk.Poly.create_box(body, (20,20), radius = 0.5)
+    shape = pymunk.Circle(body, 15)
     shape.color = pygame.color.THECOLORS[col]
     #Show heading side
     heading = pymunk.Circle(body, 2, offset = (0,5))
@@ -93,18 +94,16 @@ class Agent:
         self.index = index
         self.init_pos = pos
         self.config_space_generated = False
+        self.motion_plan_generated = False
+
     #Get body data
     def get_body(self):
         return self.body
+
     #Holonomic motion control
     def move_robot(self, vel):
         self.body.velocity = vel
-    #Robot manual controller
-    # def man_controller(self, index):
-    #     #Controls position
-    #     print("Man_controller running")
-    #     for event in pygame.event.get():
-    #         print("event")
+
     #Robot config space thread
     def start_config_space_thread(self, window_matrix):
         self.map = window_matrix
@@ -112,20 +111,21 @@ class Agent:
                                      args=())
         config_space_thread.daemon = True
         config_space_thread.start()
+
     #Robot config space generator
     def static_config_space(self):
         #Threshold map to get obstacle map
         _, obstacle_map = cv2.threshold(self.map[:,:,1], 200, 255, cv2.THRESH_BINARY)   #Using G channel
         # cv2.imshow("Obstacle map", obstacle_map)
-        obstacle_map = obstacle_map.astype(bool)
+        self.obstacle_map = obstacle_map.astype(bool)
         print("LOG: Generating configuration space")
-        self.static_config = config_space.gen_config(obstacle_map, 12)
+        self.static_config = config_space.gen_config(self.obstacle_map, 20)
         print("LOG: Configuration space generated!")
-        plt.matshow(self.static_config)
         self.config_space_generated = True
-        plt.show()
+        # plt.show()
+
     #Robot motion planning thread
-    def start_motion_plan_thred(self,goal):
+    def start_motion_plan_thread(self,goal):
         self.goal = goal
         motion_plan_thread = Thread(target = self.motion_plan,
                                     args = ())
@@ -140,12 +140,84 @@ class Agent:
             continue
         print("LOG: Starting motion planning")
         self.astar_obj = Astar(self.static_config, 0,0,screen_size[0], screen_size[1])
-        self.pathx, self.pathy = self.astar_obj.find_best_route(screen_size[1]-self.init_pos[1],
-                                            self.init_pos[0],
-                                            screen_size[1]-self.goal[1],
-                                            self.goal[0])
-        plt.plot(self.pathx, self.pathy, "r")
-        # plt.show()
+        self.gen_pathy, self.gen_pathx = self.astar_obj.find_best_route(screen_size[0]-self.init_pos[0],
+                                            self.init_pos[1],
+                                            screen_size[0]-self.goal[0],
+                                            self.goal[1])
+        self.motion_plan_generated = True
+        # print(self.gen_pathx)
+        # print(self.gen_pathy)
+        #Adjustments for pymunk
+        self.act_pathx = np.array(self.gen_pathx[::-1])
+        self.act_pathy = screen_size[1] - np.array(self.gen_pathy[::-1])
+        # print(self.act_pathx)
+        # print(self.act_pathy)
+
+    #Plotting thread
+    def start_plot_all_thread(self):
+        plot_all_thread = Thread(target = self.plot_all, args = ())
+        plot_all_thread.daemon = True
+        plot_all_thread.start()
+
+    #Plot plot plot!
+    def plot_all(self):
+        fig, (ax1,ax2) = plt.subplots(1,2)
+        ax1.title.set_text("Static Configuration Space")
+        ax1.axes.get_xaxis().set_visible(False)
+        ax1.axes.get_yaxis().set_visible(False)
+        ax2.title.set_text("A* Algorithm Plan")
+        ax2.axes.get_xaxis().set_visible(False)
+        ax2.axes.get_yaxis().set_visible(False)
+        while not self.config_space_generated:
+            continue
+        ax1.matshow(self.static_config)
+        ax2.imshow(self.obstacle_map)
+        plt.show(block=False)
+        plt.pause(1)
+        while not self.motion_plan_generated:
+            continue
+        ax1.plot(self.gen_pathx, self.gen_pathy, "r")
+        ax2.plot(self.gen_pathx, self.gen_pathy, "r")
+        plt.show()
+
+    #Robot movement thread
+    def start_robot_move_thread(self):
+        robot_move_thread = Thread(target = self.robot_move,
+                                    args = ())
+        robot_move_thread.daemon = True
+        robot_move_thread.start()
+
+    #Robot movement
+    def robot_move(self):
+        #Won't start until motion plan
+        while not self.motion_plan_generated:
+            continue
+        print("LOG: Starting Motion")
+        #Constant velocity, angle controlled
+        #Get angle
+        curr_x = self.act_pathx[0]
+        curr_y = self.act_pathy[0]
+        for (x,y) in zip(self.act_pathx[1:], self.act_pathy[1:]):
+            #atan2 to get angle
+            head_angle = np.arctan2(y-curr_y,x-curr_x)
+            # print("Y: ", y-curr_y, "\tX: ", x-curr_x,
+            #       "\tAng: ", head_angle*180/np.pi)
+            #set velocity
+            self.move_robot((100*np.cos(head_angle),
+                             100*np.sin(head_angle)))
+            #set curr loc
+            curr_x = self.body.position[0]
+            curr_y = self.body.position[1]
+
+            #wait until robot reaches the selected point
+            while not ((int(x-curr_x) == 0) and (int(y-curr_y) == 0)):
+                #update loc until reached
+                curr_x = self.body.position[0]
+                curr_y = self.body.position[1]
+                continue
+        #If goal reached, stop
+        self.move_robot((0,0))
+        print("LOG: Motion Completed")
 
 #Simulator main control
 def simulation():
@@ -161,21 +233,26 @@ def simulation():
     clock = pygame.time.Clock()
     #Create space
     space = pymunk.Space()
-    #Create agent objects
-    robot1 = Agent(1, space, (50,50))
-    body = robot1.get_body()
+    #Create agent object
+    robot = Agent(1, space, (50,50))
+    body = robot.get_body()
     #Create map
     generate_test_map(space)
 
     #Control section
-    #1. Generate config map
+    #1. Generate configuration space
     screen.fill((0,0,0))
     space.debug_draw(draw_options)
     window_matrix = np.array(pygame.surfarray.array3d(screen))
     window_matrix = window_matrix[..., ::-1]
     window_matrix = np.flip(np.rot90(window_matrix, 1),0)
-    robot1.start_config_space_thread(window_matrix)
-    robot1.start_motion_plan_thred((50,50))
+    robot.start_config_space_thread(window_matrix)
+    #2. Generate motion plan
+    robot.start_motion_plan_thread(goal)
+    #3. Plot stuff
+    robot.start_plot_all_thread()
+    #4. Run stuff
+    robot.start_robot_move_thread()
     #Simulator loop
     while True:
         #Exiting the simulator
@@ -189,25 +266,28 @@ def simulation():
             if event.type == KEYDOWN:
                 if event.key == K_w:
                     print("LOG: W pressed")
-                    robot1.move_robot((-100*np.sin(body.angle),100*np.cos(body.angle)))
+                    robot.move_robot((0,100))
+                    # print(body.angle*360/np.pi)
                 elif event.key == K_s:
                     print("LOG: S pressed")
-                    robot1.move_robot((100*np.sin(body.angle),-100*np.cos(body.angle)))
+                    robot.move_robot((0,-100))
                 elif event.key == K_a:
                     print("LOG: A pressed")
-                    body.angular_velocity = 1
+                    robot.move_robot((-100,0))
                 elif event.key == K_d:
                     print("LOG: D pressed")
-                    body.angular_velocity = -1
+                    robot.move_robot((100,0))
             else:
                 body.velocity = (0,0)
                 body.angular_velocity = 0
 
         #Run controller in the simulation loop
-        # robot1.man_controller(1)
+        # robot.man_controller(1)
 
         #Update screen
         screen.fill((0,0,0))
+        pygame.draw.rect(screen, pygame.color.THECOLORS["yellow"],
+                         (goal[0]-10, screen_size[1]-goal[1]-10,20,20))
         space.step(1/50.0)
         space.debug_draw(draw_options)
         pygame.display.flip()
