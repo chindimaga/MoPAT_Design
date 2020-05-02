@@ -9,6 +9,7 @@ import pymunk
 from pymunk import pygame_util
 import random
 
+
 #Funtion to create a ball
 def add_ball(space):
     mass = 5
