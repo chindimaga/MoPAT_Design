@@ -11,12 +11,14 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 from threading import Thread
+import time
 
 #Global variables
 screen_size = (500,500)
-goal = (450,450)        #Pymunk coords
+goal = (450,300)        #Pymunk coords
 config_space_generated = False
 no_robots = 0
+reached_robots = 0
 
 #Config space primers
 static_config = np.zeros(screen_size)
@@ -217,10 +219,10 @@ class Agent:
             continue
         print("LOG: Robot_", self.index,"Starting motion planning")
         self.astar_obj = Astar(self.index, static_config, 0,0,screen_size[0], screen_size[1])
-        self.gen_pathy, self.gen_pathx = self.astar_obj.find_best_route(screen_size[0]-self.init_pos[0],
-                                            self.init_pos[1],
-                                            screen_size[0]-self.goal[0],
-                                            self.goal[1])
+        self.gen_pathy, self.gen_pathx = self.astar_obj.find_best_route(screen_size[1]-self.init_pos[1],
+                                            self.init_pos[0],
+                                            screen_size[1]-self.goal[1],
+                                            self.goal[0])
         self.motion_plan_generated = True
         #Store to global variable
         robot_paths[self.index] = (self.gen_pathx, self.gen_pathy)
@@ -230,10 +232,11 @@ class Agent:
 
     #Robot movement
     def robot_move(self):
+        global reached_robots
         #Won't start until motion plan
         while not self.motion_plan_generated:
             continue
-        print("LOG: Robot_", self.index, " Starting Motion")
+        print("LOG: Robot_", self.index, " Starting motion")
         #Constant velocity, angle controlled
         #Get angle
         curr_x = self.act_pathx[0]
@@ -255,7 +258,8 @@ class Agent:
                 continue
         #If goal reached, stop
         self.move_robot((0,0))
-        print("LOG: Robot_", self.index, " Motion Completed")
+        print("LOG: Robot_", self.index, " Goal reached")
+        reached_robots += 1
 
 #Simulator main control
 def simulation():
@@ -263,9 +267,11 @@ def simulation():
     Main function to run the simulation
     '''
     global screen_size
+    global no_robots
+    global reached_robots
     #Game initialization
     pygame.init()
-    pygame.display.set_caption("MoPAT Pymunk Simulator Mk 1")
+    pygame.display.set_caption("Starting MoPAT Pymunk Simulator Mk 1")
     screen = pygame.display.set_mode(screen_size)
     draw_options = pymunk.pygame_util.DrawOptions(screen)
     clock = pygame.time.Clock()
@@ -273,16 +279,12 @@ def simulation():
     space = pymunk.Space()
     #Create agent object
     robot0 = Agent(0, space, (50,50))
-    # robot1 = Agent(1, space, (50,100))
-    robot2 = Agent(2, space, (150,50))
     #Create map
     generate_test_map(space)
     #Start config space thread
     start_config_space_thread(screen, space, draw_options)
     #Start robot global controller
     robot0.start_global_controller_thread(goal)
-    # robot1.start_global_controller_thread(goal)
-    robot2.start_global_controller_thread(goal)
     #Simulator graphic loop
     while True:
         #Exiting the simulator
@@ -293,6 +295,11 @@ def simulation():
             elif event.type == KEYDOWN and (event.key in [K_ESCAPE, K_q]):
                 print("LOG: Exiting simulation")
                 sys.exit(0)
+        if reached_robots == no_robots:
+            print("LOG: All robots reached")
+            print("LOG: Exiting simulation in 5s")
+            time.sleep(5)
+            sys.exit(0)
         #Update screen
         screen.fill((0,0,0))
         pygame.draw.rect(screen, pygame.color.THECOLORS["yellow"],
