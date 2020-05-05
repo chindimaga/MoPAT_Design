@@ -1,5 +1,5 @@
-#Guining Pertin - Started - 01-05-20
-#Single Robot Simulator
+#Guining Pertin - Started - 05-05-20
+#Multi Robot Simulator
 
 #Import the required libraries
 import sys
@@ -19,18 +19,24 @@ goal = (450,300)        #Pymunk coords
 config_space_generated = False
 no_robots = 0
 reached_robots = 0
+#12 Robots - 12 Colors
+colors = ["red", "blue", "brown", "lawngreen",
+          "gold" , "violet","blueviolet", "orange",
+          "gainsboro", "springgreen", "deeppink", "cyan"]
 
 #Config space primers
 static_config = np.zeros(screen_size)
 obstacle_map = np.zeros(screen_size)
 map = np.zeros(screen_size)
 
-#Robot paths
+#Multi-Robot Coodinator variables
+#Index : (plan_generated, reached_goal)
+mrc_input_flags = {}
+#Index : (wait_robot)
+mrc_output_flags = {}
+mrc_start_motion = False
 robot_paths = {}
-#12 Robots - 12 Colors
-colors = ["red", "blue", "brown", "lawngreen",
-          "gold" , "violet","blueviolet", "orange",
-          "gainsboro", "springgreen", "deeppink", "cyan"]
+robot_positions = {}
 
 #MoPAT files
 import config_space
@@ -141,6 +147,7 @@ def static_config_space():
 #Plot plot plot!
 def plot_all():
     global no_robots
+    global mrc_start_motion
     #Set plots
     fig, (ax1,ax2) = plt.subplots(1,2)
     ax1.title.set_text("Static Configuration Space")
@@ -154,8 +161,8 @@ def plot_all():
     ax2.imshow(obstacle_map)
     plt.show(block=False)
     plt.pause(1)
-    #If all paths not generated yet
-    while len(robot_paths) != no_robots:
+    #Wait for mrc_signal
+    while not mrc_start_motion:
         continue
     #Plot each
     print("LOG: Plotting all paths")
@@ -164,6 +171,48 @@ def plot_all():
         ax1.plot(robot_paths[i][0], robot_paths[i][1], colors[i])
         ax2.plot(robot_paths[i][0], robot_paths[i][1], colors[i])
     plt.show()
+
+#Multi-robot coordinator thread
+def start_coordinator_thread():
+    coordinator_thread = Thread(target = multi_robot_coordinator, args = ())
+    coordinator_thread.daemon = True
+    coordinator_thread.start()
+
+#Multi-robot coordinator node
+def multi_robot_coordinator():
+    global mrc_input_flags
+    global mrc_start_motion
+    started_all = False
+    #Check it continuously
+    while True:
+        #1. Motion coordinator - start everyone at the same time
+        #Motion Coordinator check
+        motion_plans_generated = 0
+        if not started_all:
+            for i in mrc_input_flags:
+                #Update number of motion plans generated
+                if mrc_input_flags[i][0]: motion_plans_generated += 1
+            #Check if all plans generated
+            if motion_plans_generated == no_robots:
+                mrc_start_motion = True
+                started_all = True
+                #End the function as a test
+                return 0
+        #2. Robot-Robot collision control
+        #3. Goal distance coordinator
+        #4. Formation control coordinator
+
+# #Check if a robot is very close
+# def check_robot_collision(index):
+#     for i in robot_positions:
+#         #Check collision with each robot except itself
+#         if i == index: continue
+#         x = robot_positions[i][0] - robot_positions[index][0]
+#         y = robot_positions[i][1] - robot_positions[index][1]
+#         if np.linalg.norm([x,y]) < 20 and i > index:
+#             return 1
+#     #If no one nearby
+#     return 0
 
 #Agent class
 class Agent:
@@ -179,10 +228,15 @@ class Agent:
     #Create the robot shape
     def __init__(self, index, space, pos):
         global no_robots
+        global mrc_input_flags
+        global mrc_output_flags
         no_robots += 1
         self.body = add_robot(space, pos, colors[index])
         self.index = index
         self.init_pos = pos
+        robot_positions[self.index] = (pos[0], pos[1])
+        mrc_input_flags[index] = (False, False)
+        mrc_output_flags[index] = (False)
 
     #Get body data
     def get_body(self):
@@ -204,11 +258,12 @@ class Agent:
     #Combined global robot_controller
     def global_controller(self):
         global config_space_generated
-        #Don't start motion planning until config space is generated
+        #Don't start motion planning until config_space is generated
         while not config_space_generated:
             continue
         #Get motion plan
         self.motion_plan()
+        #Don't start motion control until mrc signal
         #Move robot
         self.robot_move()
 
@@ -217,6 +272,7 @@ class Agent:
         global screen_size
         global static_config
         global robot_paths
+        global mrc_input_flags
         print("LOG: Robot_", self.index,"Starting motion planning")
         self.astar_obj = Astar(self.index, static_config, 0,0,screen_size[0], screen_size[1])
         self.gen_pathy, self.gen_pathx = self.astar_obj.find_best_route(screen_size[1]-self.init_pos[1],
@@ -228,12 +284,18 @@ class Agent:
         #Adjustments for pymunk
         self.act_pathx = np.array(self.gen_pathx[::-1])
         self.act_pathy = screen_size[1] - np.array(self.gen_pathy[::-1])
+        #Set mrc flag
+        mrc_input_flags[self.index] = (True, False)
 
     #Robot movement
     def robot_move(self):
         global reached_robots
-        print("LOG: Robot_", self.index, " Starting motion")
+        global mrc_start_motion
         #Constant velocity, angle controlled
+        #Wait for mrc signal
+        while not mrc_start_motion:
+            continue
+        print("LOG: Robot_", self.index, " Starting motion")
         #Get angle
         curr_x = self.act_pathx[0]
         curr_y = self.act_pathy[0]
@@ -246,6 +308,8 @@ class Agent:
             #set curr loc
             curr_x = self.body.position[0]
             curr_y = self.body.position[1]
+            #Update global positions
+            robot_positions[self.index] = (curr_x, curr_y)
             #wait until robot reaches the selected point
             while not ((int(x-curr_x) == 0) and (int(y-curr_y) == 0)):
                 #update loc until reached
@@ -267,7 +331,7 @@ def simulation():
     global reached_robots
     #Game initialization
     pygame.init()
-    pygame.display.set_caption("Starting MoPAT Single-Robot Simulator Mk 2")
+    pygame.display.set_caption("Starting MoPAT Multi-Robot Simulator Mk 1")
     screen = pygame.display.set_mode(screen_size)
     draw_options = pymunk.pygame_util.DrawOptions(screen)
     clock = pygame.time.Clock()
@@ -275,12 +339,18 @@ def simulation():
     space = pymunk.Space()
     #Create agent object
     robot0 = Agent(0, space, (50,50))
+    robot1 = Agent(1, space, (50,100))
+    robot2 = Agent(2, space, (200,50))
     #Create map
     generate_test_map(space)
     #Start config space thread
     start_config_space_thread(screen, space, draw_options)
-    #Start robot global controller
+    #Start multi_robot_coodinator thread
+    start_coordinator_thread()
+    #Start robot global controller thread
     robot0.start_global_controller_thread(goal)
+    robot1.start_global_controller_thread(goal)
+    robot2.start_global_controller_thread(goal)
     #Simulator graphic loop
     while True:
         #Exiting the simulator
