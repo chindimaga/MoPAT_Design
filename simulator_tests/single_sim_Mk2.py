@@ -15,6 +15,20 @@ from threading import Thread
 #Global variables
 screen_size = (500,500)
 goal = (450,450)        #Pymunk coords
+config_space_generated = False
+no_robots = 0
+
+#Config space primers
+static_config = np.zeros(screen_size)
+obstacle_map = np.zeros(screen_size)
+map = np.zeros(screen_size)
+
+#Robot paths
+robot_paths = {}
+#12 Robots - 12 Colors
+colors = ["red", "blue", "brown", "lawngreen",
+          "gold" , "violet","blueviolet", "orange",
+          "gainsboro", "springgreen", "deeppink", "cyan"]
 
 #MoPAT files
 import config_space
@@ -29,7 +43,7 @@ def add_robot(space, pos, col):
         pos     : (posx, posy) tuple
         col     : string color name
     Returns:
-        shape   : robot shape
+        body    : robot_body object
     '''
     #Create robot main body
     body = pymunk.Body(1, pymunk.moment_for_circle(1, 0, 12))
@@ -74,6 +88,11 @@ def generate_random_map():
 
 #Generate test map
 def generate_test_map(space):
+    '''
+    Function to generate a predefined map
+    Arguments:
+        space   : pymunk space object
+    '''
     #Create borders
     add_static_obstacle(space, (0,0), (5,500))
     add_static_obstacle(space, (0,0), (500,5))
@@ -86,14 +105,82 @@ def generate_test_map(space):
     add_static_obstacle(space, (250,80), (20,350))
     add_static_obstacle(space, (250,80), (150,20))
 
+#Convert pygame screen to matrix
+def conv2matrix(screen, space, draw_options):
+    screen.fill((0,0,0))
+    space.debug_draw(draw_options)
+    window_matrix = np.array(pygame.surfarray.array3d(screen))
+    window_matrix = window_matrix[..., ::-1]
+    window_matrix = np.flip(np.rot90(window_matrix, 1),0)
+    return window_matrix
+
+#Start configuration space thread
+def start_config_space_thread(screen, space, draw_options):
+    global map
+    map = conv2matrix(screen, space, draw_options)
+    config_space_thread = Thread(target = static_config_space, args = ())
+    config_space_thread.daemon = True
+    config_space_thread.start()
+
+#Robot config space generator
+def static_config_space():
+    global obstacle_map
+    global static_config
+    global config_space_generated
+    #Threshold map to get obstacle map
+    _, obstacle_map = cv2.threshold(cv2.cvtColor(map, cv2.COLOR_BGR2GRAY), 250, 255, cv2.THRESH_BINARY)   #Using G channel
+    obstacle_map = obstacle_map.astype(bool)
+    print("LOG: Generating configuration space")
+    static_config = config_space.gen_config(obstacle_map, 20)
+    print("LOG: Configuration space generated!")
+    config_space_generated = True
+    plot_all()
+
+#Plot plot plot!
+def plot_all():
+    global no_robots
+    #Set plots
+    fig, (ax1,ax2) = plt.subplots(1,2)
+    ax1.title.set_text("Static Configuration Space")
+    ax1.axes.get_xaxis().set_visible(False)
+    ax1.axes.get_yaxis().set_visible(False)
+    ax2.title.set_text("A* Algorithm Plan")
+    ax2.axes.get_xaxis().set_visible(False)
+    ax2.axes.get_yaxis().set_visible(False)
+    #Plot config and map
+    ax1.matshow(static_config)
+    ax2.imshow(obstacle_map)
+    plt.show(block=False)
+    plt.pause(1)
+    #If all paths not generated yet
+    while len(robot_paths) != no_robots:
+        continue
+    #Plot each
+    print("LOG: Plotting all paths")
+    for i in robot_paths:
+        #Plot the paths
+        ax1.plot(robot_paths[i][0], robot_paths[i][1], colors[i])
+        ax2.plot(robot_paths[i][0], robot_paths[i][1], colors[i])
+    plt.show()
+
 #Agent class
 class Agent:
+    '''
+    The robot agent class
+    Parameters:
+        body            : robot body object
+        index           : robot predefined index
+        init_pos        : starting location
+        goal            : goal location
+        map             : the screen matrix
+    '''
     #Create the robot shape
     def __init__(self, index, space, pos):
-        self.body = add_robot(space, pos, "blue")
+        global no_robots
+        no_robots += 1
+        self.body = add_robot(space, pos, colors[index])
         self.index = index
         self.init_pos = pos
-        self.config_space_generated = False
         self.motion_plan_generated = False
 
     #Get body data
@@ -104,95 +191,49 @@ class Agent:
     def move_robot(self, vel):
         self.body.velocity = vel
 
-    #Robot config space thread
-    def start_config_space_thread(self, window_matrix):
-        self.map = window_matrix
-        config_space_thread = Thread(target = self.static_config_space,
-                                     args=())
-        config_space_thread.daemon = True
-        config_space_thread.start()
-
-    #Robot config space generator
-    def static_config_space(self):
-        #Threshold map to get obstacle map
-        _, obstacle_map = cv2.threshold(self.map[:,:,1], 200, 255, cv2.THRESH_BINARY)   #Using G channel
-        # cv2.imshow("Obstacle map", obstacle_map)
-        self.obstacle_map = obstacle_map.astype(bool)
-        print("LOG: Generating configuration space")
-        self.static_config = config_space.gen_config(self.obstacle_map, 20)
-        print("LOG: Configuration space generated!")
-        self.config_space_generated = True
-        # plt.show()
-
-    #Robot motion planning thread
-    def start_motion_plan_thread(self,goal):
+    #Combined robot_controller thread
+    def start_global_controller_thread(self, goal):
+        #Set parameters
         self.goal = goal
-        motion_plan_thread = Thread(target = self.motion_plan,
-                                    args = ())
-        motion_plan_thread.daemon = True
-        motion_plan_thread.start()
+        #Controller thread
+        global_controller_thread = Thread(target = self.global_controller, args = ())
+        global_controller_thread.daemon = True
+        global_controller_thread.start()
+
+    #Combined global robot_controller
+    def global_controller(self):
+        #Get motion plan
+        self.motion_plan()
+        #Move robot
+        self.robot_move()
 
     #Robot motion planning
     def motion_plan(self):
         global screen_size
+        global static_config
+        global robot_paths
         #Don't start motion planning until config space is generated
-        while not self.config_space_generated:
+        while not config_space_generated:
             continue
-        print("LOG: Starting motion planning")
-        self.astar_obj = Astar(self.static_config, 0,0,screen_size[0], screen_size[1])
+        print("LOG: Robot_", self.index,"Starting motion planning")
+        self.astar_obj = Astar(self.index, static_config, 0,0,screen_size[0], screen_size[1])
         self.gen_pathy, self.gen_pathx = self.astar_obj.find_best_route(screen_size[0]-self.init_pos[0],
                                             self.init_pos[1],
                                             screen_size[0]-self.goal[0],
                                             self.goal[1])
         self.motion_plan_generated = True
-        # print(self.gen_pathx)
-        # print(self.gen_pathy)
+        #Store to global variable
+        robot_paths[self.index] = (self.gen_pathx, self.gen_pathy)
         #Adjustments for pymunk
         self.act_pathx = np.array(self.gen_pathx[::-1])
         self.act_pathy = screen_size[1] - np.array(self.gen_pathy[::-1])
-        # print(self.act_pathx)
-        # print(self.act_pathy)
-
-    #Plotting thread
-    def start_plot_all_thread(self):
-        plot_all_thread = Thread(target = self.plot_all, args = ())
-        plot_all_thread.daemon = True
-        plot_all_thread.start()
-
-    #Plot plot plot!
-    def plot_all(self):
-        fig, (ax1,ax2) = plt.subplots(1,2)
-        ax1.title.set_text("Static Configuration Space")
-        ax1.axes.get_xaxis().set_visible(False)
-        ax1.axes.get_yaxis().set_visible(False)
-        ax2.title.set_text("A* Algorithm Plan")
-        ax2.axes.get_xaxis().set_visible(False)
-        ax2.axes.get_yaxis().set_visible(False)
-        while not self.config_space_generated:
-            continue
-        ax1.matshow(self.static_config)
-        ax2.imshow(self.obstacle_map)
-        plt.show(block=False)
-        plt.pause(1)
-        while not self.motion_plan_generated:
-            continue
-        ax1.plot(self.gen_pathx, self.gen_pathy, "r")
-        ax2.plot(self.gen_pathx, self.gen_pathy, "r")
-        plt.show()
-
-    #Robot movement thread
-    def start_robot_move_thread(self):
-        robot_move_thread = Thread(target = self.robot_move,
-                                    args = ())
-        robot_move_thread.daemon = True
-        robot_move_thread.start()
 
     #Robot movement
     def robot_move(self):
         #Won't start until motion plan
         while not self.motion_plan_generated:
             continue
-        print("LOG: Starting Motion")
+        print("LOG: Robot_", self.index, " Starting Motion")
         #Constant velocity, angle controlled
         #Get angle
         curr_x = self.act_pathx[0]
@@ -200,15 +241,12 @@ class Agent:
         for (x,y) in zip(self.act_pathx[1:], self.act_pathy[1:]):
             #atan2 to get angle
             head_angle = np.arctan2(y-curr_y,x-curr_x)
-            # print("Y: ", y-curr_y, "\tX: ", x-curr_x,
-            #       "\tAng: ", head_angle*180/np.pi)
             #set velocity
             self.move_robot((100*np.cos(head_angle),
                              100*np.sin(head_angle)))
             #set curr loc
             curr_x = self.body.position[0]
             curr_y = self.body.position[1]
-
             #wait until robot reaches the selected point
             while not ((int(x-curr_x) == 0) and (int(y-curr_y) == 0)):
                 #update loc until reached
@@ -217,7 +255,7 @@ class Agent:
                 continue
         #If goal reached, stop
         self.move_robot((0,0))
-        print("LOG: Motion Completed")
+        print("LOG: Robot_", self.index, " Motion Completed")
 
 #Simulator main control
 def simulation():
@@ -234,26 +272,18 @@ def simulation():
     #Create space
     space = pymunk.Space()
     #Create agent object
-    robot = Agent(1, space, (50,50))
-    body = robot.get_body()
+    robot0 = Agent(0, space, (50,50))
+    # robot1 = Agent(1, space, (50,100))
+    robot2 = Agent(2, space, (150,50))
     #Create map
     generate_test_map(space)
-
-    #Control section
-    #1. Generate configuration space
-    screen.fill((0,0,0))
-    space.debug_draw(draw_options)
-    window_matrix = np.array(pygame.surfarray.array3d(screen))
-    window_matrix = window_matrix[..., ::-1]
-    window_matrix = np.flip(np.rot90(window_matrix, 1),0)
-    robot.start_config_space_thread(window_matrix)
-    #2. Generate motion plan
-    robot.start_motion_plan_thread(goal)
-    #3. Plot stuff
-    robot.start_plot_all_thread()
-    #4. Run stuff
-    robot.start_robot_move_thread()
-    #Simulator loop
+    #Start config space thread
+    start_config_space_thread(screen, space, draw_options)
+    #Start robot global controller
+    robot0.start_global_controller_thread(goal)
+    # robot1.start_global_controller_thread(goal)
+    robot2.start_global_controller_thread(goal)
+    #Simulator graphic loop
     while True:
         #Exiting the simulator
         for event in pygame.event.get():
@@ -263,27 +293,6 @@ def simulation():
             elif event.type == KEYDOWN and (event.key in [K_ESCAPE, K_q]):
                 print("LOG: Exiting simulation")
                 sys.exit(0)
-            if event.type == KEYDOWN:
-                if event.key == K_w:
-                    print("LOG: W pressed")
-                    robot.move_robot((0,100))
-                    # print(body.angle*360/np.pi)
-                elif event.key == K_s:
-                    print("LOG: S pressed")
-                    robot.move_robot((0,-100))
-                elif event.key == K_a:
-                    print("LOG: A pressed")
-                    robot.move_robot((-100,0))
-                elif event.key == K_d:
-                    print("LOG: D pressed")
-                    robot.move_robot((100,0))
-            else:
-                body.velocity = (0,0)
-                body.angular_velocity = 0
-
-        #Run controller in the simulation loop
-        # robot.man_controller(1)
-
         #Update screen
         screen.fill((0,0,0))
         pygame.draw.rect(screen, pygame.color.THECOLORS["yellow"],
