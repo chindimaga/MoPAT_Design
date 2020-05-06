@@ -12,10 +12,10 @@ import cv2
 import matplotlib.pyplot as plt
 from threading import Thread
 import time
+import itertools
 
 #Global variables
 screen_size = (500,500)
-goal = (450,300)        #Pymunk coords
 config_space_generated = False
 no_robots = 0
 reached_robots = 0
@@ -67,7 +67,7 @@ def add_robot(space, pos, col):
     heading.color = pygame.color.THECOLORS["black"]
     #Add the object
     space.add(body, shape, heading)
-    return body
+    return shape
 
 #Add a box shaped static obstacle
 def add_static_obstacle(space, pos, size):
@@ -160,7 +160,7 @@ def plot_all():
     ax1.matshow(static_config)
     ax2.imshow(obstacle_map)
     plt.show(block=False)
-    plt.pause(1)
+    plt.pause(0.5)
     #Wait for mrc_signal
     while not mrc_start_motion:
         continue
@@ -181,7 +181,9 @@ def start_coordinator_thread():
 #Multi-robot coordinator node
 def multi_robot_coordinator():
     global mrc_input_flags
+    global mrc_output_flags
     global mrc_start_motion
+    global robot_positions
     started_all = False
     #Check it continuously
     while True:
@@ -196,23 +198,36 @@ def multi_robot_coordinator():
             if motion_plans_generated == no_robots:
                 mrc_start_motion = True
                 started_all = True
-                #End the function as a test
-                return 0
         #2. Robot-Robot collision control
+        #Renew the collision check data
+        for i in mrc_output_flags:
+            mrc_output_flags[i][0] = False
+        #Check collision between each combination
+        for x in itertools.combinations(robot_positions, 2):
+            #If near,
+            if check_robot_collision(x[0], x[1]):
+                #One with lower index waits
+                mrc_output_flags[min(x)][0] = mrc_output_flags[min(x)][0] or True
+                #Otherwise none waits
+            else:
+                mrc_output_flags[x[0]][0] = mrc_output_flags[x[0]][0] or False
+                mrc_output_flags[x[1]][0] = mrc_output_flags[x[1]][0] or False
+        # print(robot_positions[0])
+        time.sleep(0.1)
         #3. Goal distance coordinator
         #4. Formation control coordinator
 
 # #Check if a robot is very close
-# def check_robot_collision(index):
-#     for i in robot_positions:
-#         #Check collision with each robot except itself
-#         if i == index: continue
-#         x = robot_positions[i][0] - robot_positions[index][0]
-#         y = robot_positions[i][1] - robot_positions[index][1]
-#         if np.linalg.norm([x,y]) < 20 and i > index:
-#             return 1
-#     #If no one nearby
-#     return 0
+def check_robot_collision(i, j):
+    global robot_positions
+    #Check distance between two robots
+    x = robot_positions[i][0] - robot_positions[j][0]
+    y = robot_positions[i][1] - robot_positions[j][1]
+    #If less than minimum, nearby
+    if np.linalg.norm([x,y]) < 100:
+        return 1
+    #If no one nearby
+    return 0
 
 #Agent class
 class Agent:
@@ -231,12 +246,13 @@ class Agent:
         global mrc_input_flags
         global mrc_output_flags
         no_robots += 1
-        self.body = add_robot(space, pos, colors[index])
+        self.shape = add_robot(space, pos, colors[index])
+        self.body = self.shape.body
         self.index = index
         self.init_pos = pos
         robot_positions[self.index] = (pos[0], pos[1])
-        mrc_input_flags[index] = (False, False)
-        mrc_output_flags[index] = (False)
+        mrc_input_flags[index] = [False, False]
+        mrc_output_flags[index] = [False, False]
 
     #Get body data
     def get_body(self):
@@ -245,6 +261,20 @@ class Agent:
     #Holonomic motion control
     def move_robot(self, vel):
         self.body.velocity = vel
+
+    #Draw goal positions
+    def draw_goal(self, screen):
+        global screen_size
+        global colors
+        pygame.draw.line(screen, pygame.color.THECOLORS[colors[self.index]],
+                         (self.goal[0]-10, screen_size[1]-self.goal[1]-10),
+                         (self.goal[0]+10, screen_size[1]-self.goal[1]+10),
+                         5)
+        pygame.draw.line(screen, pygame.color.THECOLORS[colors[self.index]],
+                         (self.goal[0]-10, screen_size[1]-self.goal[1]+10),
+                         (self.goal[0]+10, screen_size[1]-self.goal[1]-10),
+                         5)
+                         # (self.goal[0]-10, screen_size[1]-self.goal[1]-10,20,20))
 
     #Combined robot_controller thread
     def start_global_controller_thread(self, goal):
@@ -285,12 +315,14 @@ class Agent:
         self.act_pathx = np.array(self.gen_pathx[::-1])
         self.act_pathy = screen_size[1] - np.array(self.gen_pathy[::-1])
         #Set mrc flag
-        mrc_input_flags[self.index] = (True, False)
+        mrc_input_flags[self.index][0] = True
 
     #Robot movement
     def robot_move(self):
         global reached_robots
         global mrc_start_motion
+        global robot_positions
+        global mrc_output_flags
         #Constant velocity, angle controlled
         #Wait for mrc signal
         while not mrc_start_motion:
@@ -300,6 +332,9 @@ class Agent:
         curr_x = self.act_pathx[0]
         curr_y = self.act_pathy[0]
         for (x,y) in zip(self.act_pathx[1:], self.act_pathy[1:]):
+            #First check for mrc control signal
+            while mrc_output_flags[self.index][0]:
+                self.move_robot((0,0))
             #atan2 to get angle
             head_angle = np.arctan2(y-curr_y,x-curr_x)
             #set velocity
@@ -315,10 +350,14 @@ class Agent:
                 #update loc until reached
                 curr_x = self.body.position[0]
                 curr_y = self.body.position[1]
+                robot_positions[self.index] = (curr_x, curr_y)
                 continue
         #If goal reached, stop
         self.move_robot((0,0))
         print("LOG: Robot_", self.index, " Goal reached")
+        #Reset the advertised position after completion
+        robot_positions[self.index] = (0,0)
+        mrc_input_flags[self.index][1] = True
         reached_robots += 1
 
 #Simulator main control
@@ -335,10 +374,11 @@ def simulation():
     screen = pygame.display.set_mode(screen_size)
     draw_options = pymunk.pygame_util.DrawOptions(screen)
     clock = pygame.time.Clock()
+    goal = (450,300)        #Pymunk coords
     #Create space
     space = pymunk.Space()
     #Create agent object
-    robot0 = Agent(0, space, (50,50))
+    robot0 = Agent(0, space, (200,200))
     robot1 = Agent(1, space, (50,100))
     robot2 = Agent(2, space, (200,50))
     #Create map
@@ -348,10 +388,10 @@ def simulation():
     #Start multi_robot_coodinator thread
     start_coordinator_thread()
     #Start robot global controller thread
-    robot0.start_global_controller_thread(goal)
-    robot1.start_global_controller_thread(goal)
-    robot2.start_global_controller_thread(goal)
-    #Simulator graphic loop
+    robot0.start_global_controller_thread((450,300))
+    robot1.start_global_controller_thread((450,100))
+    robot2.start_global_controller_thread((450,180))
+    # Simulator graphic loop
     while True:
         #Exiting the simulator
         for event in pygame.event.get():
@@ -368,12 +408,15 @@ def simulation():
             sys.exit(0)
         #Update screen
         screen.fill((0,0,0))
-        pygame.draw.rect(screen, pygame.color.THECOLORS["yellow"],
-                         (goal[0]-10, screen_size[1]-goal[1]-10,20,20))
+        # pygame.draw.rect(screen, pygame.color.THECOLORS["yellow"],
+        #                  (goal[0]-10, screen_size[1]-goal[1]-10,20,20))
+        robot0.draw_goal(screen)
+        robot1.draw_goal(screen)
+        robot2.draw_goal(screen)
         space.step(1/50.0)
         space.debug_draw(draw_options)
         pygame.display.flip()
         clock.tick(50)
 
 if __name__ == "__main__":
-    simulation()
+    sys.exit(simulation())
