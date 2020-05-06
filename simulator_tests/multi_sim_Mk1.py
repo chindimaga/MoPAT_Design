@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from threading import Thread
 import time
 import itertools
+import os
 
 #Global variables
 screen_size = (500,500)
@@ -156,6 +157,8 @@ def plot_all():
     ax2.title.set_text("A* Algorithm Plan")
     ax2.axes.get_xaxis().set_visible(False)
     ax2.axes.get_yaxis().set_visible(False)
+    mngr = plt.get_current_fig_manager()
+    mngr.window.wm_geometry("+600+100")
     #Plot config and map
     ax1.matshow(static_config)
     ax2.imshow(obstacle_map)
@@ -338,8 +341,8 @@ class Agent:
             #atan2 to get angle
             head_angle = np.arctan2(y-curr_y,x-curr_x)
             #set velocity
-            self.move_robot((100*np.cos(head_angle),
-                             100*np.sin(head_angle)))
+            self.move_robot((80*np.cos(head_angle),
+                             80*np.sin(head_angle)))
             #set curr loc
             curr_x = self.body.position[0]
             curr_y = self.body.position[1]
@@ -369,6 +372,7 @@ def simulation():
     global no_robots
     global reached_robots
     #Game initialization
+    os.environ['SDL_VIDEO_WINDOW_POS'] = "+100,+100"
     pygame.init()
     pygame.display.set_caption("Starting MoPAT Multi-Robot Simulator Mk 1")
     screen = pygame.display.set_mode(screen_size)
