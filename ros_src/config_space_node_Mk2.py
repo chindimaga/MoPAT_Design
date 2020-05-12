@@ -1,18 +1,17 @@
 #MoPAT Design Lab
-#Configuration space generator
+#Configuration space node
 
 #Import libraries
+#ROS
 import rospy
-from std_msgs.msg import UInt8MultiArray
-from std_msgs.msg import MultiArrayLayout
-from std_msgs.msg import MultiArrayDimension
+from cv_bridge import CvBridge
+from sensor_msgs.msg import Image
+#Others
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy import ndimage
 
-occ_map = np.zeros((100,100), dtype=bool)
-#Rectangle in between
-occ_map[30:80, 30:80] = True
-
+#Generator function
 def gen_config(map, rad):
     """
     Generates the configuration space for given map and robot
@@ -20,14 +19,14 @@ def gen_config(map, rad):
                 map : N x M boolean matrix
                 rad : Robot size(assumed circular) in 'map' units
     Output:
-                config : N x M configuration space
+                config_space : N x M configuration space
     """
     #Rad sized circular binary structure
     rad_struct = gen_struct(rad)
     #Extend map by rad
-    config = ndimage.binary_dilation(map, structure = rad_struct)
+    config_space = ndimage.binary_dilation(map, structure = rad_struct)
     #Return
-    return config
+    return config_space
 
 def gen_struct(rad):
     """
@@ -61,37 +60,24 @@ def config_space_node():
     Create configuration space node
     """
     rad = 10
-    # occ_map = ByteMultiArray()
-    config_space = UInt8MultiArray()
-    config_space.layout.dim.append(MultiArrayDimension())
-    config_space.layout.dim.append(MultiArrayDimension())
-    config_space.layout.dim[0].size = 100
-    config_space.layout.dim[0].stride = 100*100
-    config_space.layout.dim[0].label = "length"
-    config_space.layout.dim[1].size = 100
-    config_space.layout.dim[1].stride = 100
-    config_space.layout.dim[1].label = "breadth"
-    config_space.layout.data_offset = 0
+    bridge = CvBridge()
+    occ_map = np.zeros((100,100), dtype=bool)
+    #Rectangle in between
+    occ_map[30:80, 30:80] = True
     # config_space.layout.dim[1].size = 100
     #Initialize node
     rospy.init_node("config_space_node", anonymous=True)
     #Subscribe to boolean occupancy map
     # rospy.Subscriber("/mopat/occ_map", ByteMultiArray, occ_map_cb)
     #Publish configuration space
-    pub = rospy.Publisher('mopat/config_space', UInt8MultiArray, queue_size=5)
+    pub = rospy.Publisher('mopat/config_space', Image, queue_size=5)
     #Set rate
     rate = rospy.Rate(1)
     while not rospy.is_shutdown():
         #Generate configuration space
         temp = gen_config(occ_map, rad)
-        #Convert to int8 for ROS msg
-        temp = temp.astype(np.uint8).tolist()
-        config_space.data = temp[0]
-        # print(config_space.data)
-        # print(type(config_space.data[1]))
-        # print(config_space.data)
         #Publish data
-        pub.publish(config_space)
+        pub.publish(bridge.cv2_to_imgmsg(temp.astype(np.uint8), encoding="passthrough"))
         rate.sleep()
 
 if __name__ == "__main__":
