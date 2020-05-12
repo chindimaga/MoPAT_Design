@@ -3,7 +3,7 @@ import math
 import numpy as np
 
 
-class Astar:
+class Dijkstra:
 
     def __init__(self, obmap, minx, miny, maxx, maxy):
         self.minx = minx
@@ -54,13 +54,13 @@ class Astar:
             for i, _ in enumerate(self.motion):
                 node = self.Node(current.x + self.motion[i][0],
                                  current.y + self.motion[i][1],
-                                 current.cost + self.motion[i][2]+self.calc_hvalue(current,goal_node), c_id)
+                                 current.cost + self.motion[i][2], c_id)
                 node_id = self.calc_index(node)
 
                 if node_id in Visited:
                     continue
 
-                if self.free_node(node):
+                if not self.free_node(node):
                     continue
 
                 if node_id not in explore:
@@ -75,9 +75,6 @@ class Astar:
             print("path does not exist")
 
         return px, py
-
-    def calc_hvalue(self, node, goal):
-        return max (abs(node.x - goal.x),abs(node.y - goal.y) )
 
     def calc_final_path(self, goal_node, Visited):
         px, py = [self.calc_position(goal_node.x, self.minx)], [
@@ -101,8 +98,8 @@ class Astar:
         qx = self.calc_position(node.x, self.minx)
         qy = self.calc_position(node.y, self.miny)
         if qx in range(self.minx,self.maxx) and qy in range(self.miny,self.maxy) and not self.obmap[node.x][node.y]:
-            return False
-        return True
+            return True
+        return False
 
     def dynamics(self):
         motion = [[1, 0, 1],
@@ -117,69 +114,69 @@ class Astar:
 
 
 
-print("Lets use Astar!!!")
+# print("Lets use Dijkstra!!!")
 
-# start and goal coordinates
-sx = -3
-sy = -5
-gx = 53
-gy = 80
-
-# set obstacle positions
-ox, oy = [], []
-for i in range(-10, 60):
-    ox.append(i)
-    oy.append(-10)
-for i in range(-10, 60):
-    ox.append(60)
-    oy.append(i)
+# # start and goal coordinates
+# sx = -3
+# sy = -5
+# gx = 53
+# gy = 50
+#
+# # set obstacle positions
+# ox, oy = [], []
+# for i in range(-10, 60):
+#     ox.append(i)
+#     oy.append(-10)
+# for i in range(-10, 60):
+#     ox.append(60)
+#     oy.append(i)
 # for i in range(-10, 50):
 #     ox.append(20)
 #     oy.append(i)
-for i in range(-10, 61):
-    ox.append(i)
-    oy.append(60)
-for i in range(-10, 61):
-    ox.append(-10)
-    oy.append(i)
-for i in range(20, 60):
-    ox.append(20)
-    oy.append(i)
-for i in range(0, 40):
-    ox.append(40)
-    oy.append(60 - i)
-
-
-
-plt.plot(ox, oy, ".k")
-plt.plot(sx, sy, "og")
-plt.plot(gx, gy, "xb")
-plt.grid(True)
-plt.axis("equal")
-
-
-
-
-minx = round(min(ox))
-miny = round(min(oy))
-maxx = round(max(ox))
-maxy = round(max(oy))
-xwidth = round(maxx - minx)
-ywidth = round(maxy - miny)
-# obstacle map generation
-obmap=np.zeros((xwidth+1, ywidth+1), dtype=bool)
-# self.obmap[(np.asarray(ox)-self.minx).tolist()][(np.asarray(oy)-self.miny).tolist()]=1
-# obmap=np.asarray(in_map==1,dtype=bool)
-for iox, ioy in zip(ox, oy):
-    obmap[iox-minx][ioy-miny] = True
-
-
-Astar = Astar(obmap,minx,miny,maxx,maxy)
-px, py = Astar.find_best_route(sx, sy, gx, gy)
-# print(px)
-# print(py)
-plt.plot(px, py, "r")
-
-# plt.show()
-plt.pause(10)
-print("Done")
+# for i in range(-10, 61):
+#     ox.append(i)
+#     oy.append(60)
+# for i in range(-10, 61):
+#     ox.append(-10)
+#     oy.append(i)
+# for i in range(20, 60):
+#     ox.append(30)
+#     oy.append(i)
+# for i in range(0, 40):
+#     ox.append(40)
+#     oy.append(60 - i)
+#
+#
+#
+# plt.plot(ox, oy, ".k")
+# plt.plot(sx, sy, "og")
+# plt.plot(gx, gy, "xb")
+# plt.grid(True)
+# plt.axis("equal")
+#
+#
+#
+#
+# minx = round(min(ox))
+# miny = round(min(oy))
+# maxx = round(max(ox))
+# maxy = round(max(oy))
+# xwidth = round(maxx - minx)
+# ywidth = round(maxy - miny)
+# # obstacle map generation
+# obmap=np.zeros((xwidth+1, ywidth+1), dtype=bool)
+# # self.obmap[(np.asarray(ox)-self.minx).tolist()][(np.asarray(oy)-self.miny).tolist()]=1
+# # obmap=np.asarray(in_map==1,dtype=bool)
+# for iox, ioy in zip(ox, oy):
+#     obmap[iox-minx][ioy-miny] = True
+#
+#
+# dijkstra = Dijkstra(obmap,minx,miny,maxx,maxy)
+# px, py = dijkstra.find_best_route(sx, sy, gx, gy)
+# # print(px)
+# # print(py)
+# plt.plot(px, py, "r")
+#
+# # plt.show()
+# plt.pause(10)
+# print("Done")

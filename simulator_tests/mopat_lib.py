@@ -17,12 +17,12 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../")
 from algorithms import config_space
 from algorithms.mopat_astar import Astar
 
+#Default parameters
 #Global static parameters
-screen_size = (500,500)
+screen_size = (500,500) #default
 colors = ["red", "blue", "brown", "lawngreen",
           "gold" , "violet","blueviolet", "orange",
           "gainsboro", "springgreen", "deeppink", "cyan"]
-
 #Global variables
 config_space_generated = False
 no_robots = 0
@@ -371,7 +371,7 @@ class Agent(Thread):
 
 def simulation():
     '''
-    Main function to run the simulation
+    Function to run the simulation
     '''
     global screen_size
     global no_robots
