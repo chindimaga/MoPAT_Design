@@ -1,3 +1,4 @@
+#Guining Pertin - 12-05-20
 #Import the required libraries
 import sys
 import pygame
@@ -17,15 +18,14 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../")
 from algorithms import config_space
 from algorithms.mopat_astar import Astar
 
-#Default parameters
-#Global static parameters
-screen_size = (500,500) #default
-colors = ["red", "blue", "brown", "lawngreen",
-          "gold" , "violet","blueviolet", "orange",
-          "gainsboro", "springgreen", "deeppink", "cyan"]
+#Global default parameters
+screen_size = (500,500)
+robot_starts = {0: (200,200), 1: (50, 100), 2: (200,50)}
+robot_goals = {0: (450,300), 1: (450, 100), 2: (450, 180)}
+
 #Global variables
 config_space_generated = False
-no_robots = 0
+num_robots = 0
 reached_robots = 0
 #Config space global primers
 static_config = np.zeros(screen_size)
@@ -33,11 +33,17 @@ obstacle_map = np.zeros(screen_size)
 map = np.zeros(screen_size)
 #Multi-robot coodinator global primers
 mrc_input_flags = {}    #Index : (plan_generated, reached_goal)
-mrc_output_flags = {}   #Index : (wait_robot)
+mrc_control_flags = {}   #Index : (wait_robot)
 mrc_start_motion = False
 #Motion planner global primers
+robots = {}
 robot_paths = {}
 robot_positions = {}
+
+#Colors
+colors = ["red", "blue", "brown", "lawngreen",
+          "gold" , "violet","blueviolet", "orange",
+          "gainsboro", "springgreen", "deeppink", "cyan"]
 
 def add_robot(space, pos, col):
     '''
@@ -156,7 +162,7 @@ def plot_all():
     '''
     Function to plot, almost everything needed
     '''
-    global no_robots
+    global num_robots
     #Set plots
     fig, (ax1,ax2) = plt.subplots(1,2)
     ax1.title.set_text("Static Configuration Space")
@@ -196,7 +202,7 @@ def multi_robot_coordinator():
     Function that handles all the robots initialization and collision
     '''
     global mrc_input_flags
-    global mrc_output_flags
+    global mrc_control_flags
     global mrc_start_motion
     global robot_positions
     started_all = False
@@ -210,23 +216,23 @@ def multi_robot_coordinator():
                 #Update number of motion plans generated
                 if mrc_input_flags[i][0]: motion_plans_generated += 1
             #Check if all plans generated
-            if motion_plans_generated == no_robots:
+            if motion_plans_generated == num_robots:
                 mrc_start_motion = True
                 started_all = True
         #2. Robot-Robot collision control
         #Renew the collision check data
-        for i in mrc_output_flags:
-            mrc_output_flags[i][0] = False
+        for i in mrc_control_flags:
+            mrc_control_flags[i][0] = False
         #Check collision between each combination
         for x in itertools.combinations(robot_positions, 2):
             #If near,
             if check_robot_collision(x[0], x[1]):
                 #One with lower index waits
-                mrc_output_flags[min(x)][0] = mrc_output_flags[min(x)][0] or True
+                mrc_control_flags[min(x)][0] = mrc_control_flags[min(x)][0] or True
                 #Otherwise none waits
             else:
-                mrc_output_flags[x[0]][0] = mrc_output_flags[x[0]][0] or False
-                mrc_output_flags[x[1]][0] = mrc_output_flags[x[1]][0] or False
+                mrc_control_flags[x[0]][0] = mrc_control_flags[x[0]][0] or False
+                mrc_control_flags[x[1]][0] = mrc_control_flags[x[1]][0] or False
         # print(robot_positions[0])
         time.sleep(0.1)
     #3. Goal distance coordinator
@@ -246,9 +252,9 @@ def check_robot_collision(i, j):
     #If no one nearby
     return 0
 
-class Agent(Thread):
+class Robot(Thread):
     '''
-    The robot agent class
+    The robot class
     Parameters:
         body            : robot body object
         index           : robot predefined index
@@ -260,11 +266,11 @@ class Agent(Thread):
         '''
         Well, initialize
         '''
-        super(Agent, self).__init__()
-        global no_robots
+        super(Robot, self).__init__()
+        global num_robots
         global mrc_input_flags
-        global mrc_output_flags
-        no_robots += 1
+        global mrc_control_flags
+        num_robots += 1
         self.shape = add_robot(space, pos, colors[index])
         self.body = self.shape.body
         self.index = index
@@ -272,7 +278,7 @@ class Agent(Thread):
         self.goal = goal
         robot_positions[self.index] = (pos[0], pos[1])
         mrc_input_flags[index] = [False, False]
-        mrc_output_flags[index] = [False, False]
+        mrc_control_flags[index] = [False, False]
 
     def holo_move_robot(self, vel):
         '''
@@ -327,7 +333,7 @@ class Agent(Thread):
         curr_y = self.act_pathy[0]
         for (x,y) in zip(self.act_pathx[1:], self.act_pathy[1:]):
             #First check for mrc control signal
-            while mrc_output_flags[self.index][0]:
+            while mrc_control_flags[self.index][0]:
                 self.holo_move_robot((0,0))
             #atan2 to get angle
             head_angle = np.arctan2(y-curr_y,x-curr_x)
@@ -374,7 +380,7 @@ def simulation():
     Function to run the simulation
     '''
     global screen_size
-    global no_robots
+    global num_robots
     global reached_robots
     #Game initialization
     os.environ['SDL_VIDEO_WINDOW_POS'] = "+100,+100"
@@ -383,23 +389,20 @@ def simulation():
     screen = pygame.display.set_mode(screen_size)
     draw_options = pymunk.pygame_util.DrawOptions(screen)
     clock = pygame.time.Clock()
-    goal = (450,300)        #Pymunk coords
     #Create space
     space = pymunk.Space()
-    #Create agent object
-    robot0 = Agent(0, space, (200,200), (450,300))
-    robot1 = Agent(1, space, (50,100), (450,100))
-    robot2 = Agent(2, space, (200,50), (450,180))
+    #Create robots
+    for i in robot_starts:
+        robots[i] = Robot(i, space, robot_starts[i], robot_goals[i])
     #Create map
     generate_test_map(space)
     #Start config space thread
     start_config_space_thread(screen, space, draw_options)
     #Start multi_robot_coodinator thread
     start_coordinator_thread()
-    #Start robot global controller thread
-    robot0.start()
-    robot1.start()
-    robot2.start()
+    #Start robot global controller threads
+    for i in robots:
+        robots[i].start()
     # Simulator graphic loop
     while True:
         #Exiting the simulator
@@ -410,18 +413,15 @@ def simulation():
             elif event.type == KEYDOWN and (event.key in [K_ESCAPE, K_q]):
                 print("LOG: Exiting simulation")
                 sys.exit(0)
-        if reached_robots == no_robots:
+        if reached_robots == num_robots:
             print("LOG: All robots reached")
             print("LOG: Simulation completed")
             time.sleep(5)
             sys.exit(0)
         #Update screen
         screen.fill((0,0,0))
-        # pygame.draw.rect(screen, pygame.color.THECOLORS["yellow"],
-        #                  (goal[0]-10, screen_size[1]-goal[1]-10,20,20))
-        robot0.draw_goal(screen)
-        robot1.draw_goal(screen)
-        robot2.draw_goal(screen)
+        for i in robots:
+            robots[i].draw_goal(screen)
         space.step(1/50.0)
         space.debug_draw(draw_options)
         pygame.display.flip()
