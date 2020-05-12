@@ -320,9 +320,9 @@ class Robot(Thread):
         #Set mrc flag
         mrc_input_flags[self.index][0] = True
 
-    def robot_move(self):
+    def basic_robot_controller(self):
         '''
-        Basic robot controller function
+        Basic holonomic robot controller function
         '''
         global reached_robots
         global robot_positions
@@ -373,7 +373,7 @@ class Robot(Thread):
         while not mrc_start_motion:
             continue
         #Move robot
-        self.robot_move()
+        self.basic_robot_controller()
 
 def simulation():
     '''
