@@ -1,0 +1,6 @@
+devel_space: /home/otoshuki/cv_ros/devel
+install: true
+install_space: /home/otoshuki/cv_ros/install
+profile: default
+source_space: /home/otoshuki/cv_ros/src
+workspace: /home/otoshuki/cv_ros
