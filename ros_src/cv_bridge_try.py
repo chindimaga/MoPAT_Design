@@ -15,7 +15,7 @@ class image_converter:
     self.image_pub = rospy.Publisher("image_topic_2",Image, queue_size = 5)
 
     self.bridge = CvBridge()
-    self.image_sub = rospy.Subscriber("image_topic",Image,self.callback)
+    self.image_sub = rospy.Subscriber("mopat/config_space",Image,self.callback)
 
   def callback(self,data):
     try:
@@ -29,7 +29,7 @@ class image_converter:
 
     cv2.imshow("Image window", cv_image)
     cv2.waitKey(3)
-    
+
     try:
       self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
     except CvBridgeError as e:

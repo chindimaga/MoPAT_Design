@@ -75,9 +75,10 @@ def config_space_node():
     rate = rospy.Rate(1)
     while not rospy.is_shutdown():
         #Generate configuration space
-        temp = gen_config(occ_map, rad)
+        temp = gen_config(occ_map, rad).astype(np.uint8)
+        # temp[30:80, 30:80] = 255
         #Publish data
-        pub.publish(bridge.cv2_to_imgmsg(temp.astype(np.uint8), encoding="passthrough"))
+        pub.publish(bridge.cv2_to_imgmsg(temp, encoding="passthrough"))
         rate.sleep()
 
 if __name__ == "__main__":
