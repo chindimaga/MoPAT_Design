@@ -1,22 +1,29 @@
-#Guining Pertin - 14-05-20
+#Guining Pertin
+#Simulator node - 12-05-20
+
+'''
+This node runs the entire simulation(only)
+Subcribed topics:
+    mopat/robot_postion     -   std_msgs/String #ToBeChanged
+    mopat/user_input        -   std_msgs/String #ToBeChanged
+Published topics:
+    mopat/raw_image         -   sensor_msgs/Image (BGR)
+'''
+
+#Import libraries
+#ROS
+import rospy
+from cv_bridge import CvBridge
+from sensor_msgs.msg import Image
+from std_msgs.msg import String
+#Others
 import sys
 import pygame
 from pygame.locals import *
 import pymunk
 from pymunk import pygame_util
 import numpy as np
-import cv2
-import matplotlib.pyplot as plt
-from threading import Thread
-import time
-import itertools
 import os
-
-#ROS
-import rospy
-from cv_bridge import CvBridge
-from sensor_msgs.msg import Image
-from std_msgs.msg import String
 
 screen_size = (500,500)
 steps = 50
@@ -91,7 +98,7 @@ def simulator_node():
     #Game initialization
     os.environ['SDL_VIDEO_WINDOW_POS'] = "+100,+100"
     pygame.init()
-    pygame.display.set_caption("Starting MoPAT Multi-Robot Simulator Mk 1")
+    pygame.display.set_caption("MoPAT Multi-Robot Simulator MkII")
     screen = pygame.display.set_mode(screen_size)
     draw_options = pymunk.pygame_util.DrawOptions(screen)
     clock = pygame.time.Clock()
@@ -99,11 +106,12 @@ def simulator_node():
     space = pymunk.Space(threaded = True)
     space.threads = 2
     #Create node
-    rospy.init_node("simualtor_node", anonymous = True)
-    #Publish simulator raw output
-    pub = rospy.Publisher("mopat/sim_raw_image", Image, queue_size=5)
-    #Set rate
-    rate = rospy.Rate(30)
+    rospy.init_node("simulator_node")
+    print("LOG: Started MoPAT Multi-Robot Simulator MkII node")
+    #Subscribe to individual robot controller
+    ####################################################
+    #Publish simulator raw image
+    pub = rospy.Publisher("mopat/raw_image", Image, queue_size=5)
     #Create map
     generate_test_map(space)
     #Run the simulator
@@ -121,10 +129,10 @@ def simulator_node():
         screen.fill((0,0,0))
         space.step(1/steps)
         space.debug_draw(draw_options)
-        #Get raw map
-        map = conv2matrix(screen, space, draw_options)
+        #Get raw iamge
+        raw_image = conv2matrix(screen, space, draw_options)
         #Publish raw data
-        pub.publish(bridge.cv2_to_imgmsg(map, encoding="passthrough"))
+        pub.publish(bridge.cv2_to_imgmsg(raw_image, encoding="passthrough"))
         pygame.display.flip()
         clock.tick(steps)
         # print(clock.get_fps())

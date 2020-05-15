@@ -1,5 +1,14 @@
 #MoPAT Design Lab
-#Configuration space node - 14-05-20
+#Configuration space node - 12-05-20
+
+'''
+This node generates the configuration space for the given occ_map
+Subscribed topics:
+    mopat/occ_map           -   sensor_msgs/Image (Bool)
+    mopat/user_input        -   std_msgs/String #ToBeChanged
+Published topics:
+    mopat/config_space      -   sensor_msgs/Image (Bool)
+'''
 
 #Import libraries
 #ROS
@@ -7,10 +16,11 @@ import rospy
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
-#Other
+#Others
 import sys
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 
 #MoPAT alogirithm files
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../")
@@ -33,7 +43,7 @@ def occ_map_cb(data):
     global occ_map
     if not got_occ_map:
         occ_map = bridge.imgmsg_to_cv2(data, desired_encoding = "passthrough")
-        #Get boolean map
+        #Convert to boolean
         occ_map = occ_map.astype(bool)
         print("LOG: Got occupancy map")
         got_occ_map = True
@@ -52,7 +62,8 @@ def config_space_node():
     '''
     global occ_map
     #Initialize node
-    rospy.init_node("config_space_node", anonymous=True)
+    rospy.init_node("config_space_node")
+    print("LOG: Started Configuration Space Generator node")
     #Subscribe to occupancy map data - Image
     rospy.Subscriber("/mopat/occ_map", Image, occ_map_cb)
     #Subscribe to user input - String
@@ -64,10 +75,10 @@ def config_space_node():
     while not rospy.is_shutdown():
         #Don't generate until occ map is found
         if got_occ_map:
-            #Generate configuration space
-            config_space = config_space.gen_config(occ_map, rad).astype(np.uint8)
-            #Publish data
-            pub.publish(bridge.cv2_to_imgmsg(config_space, encoding="passthrough"))
+            #Generate static configuration space
+            static_config = config_space.gen_config(occ_map, rad)
+            #Publish data - needs to be converted
+            pub.publish(bridge.cv2_to_imgmsg(static_config.astype(np.uint8), encoding="passthrough"))
         rate.sleep()
 
 if __name__ == "__main__":

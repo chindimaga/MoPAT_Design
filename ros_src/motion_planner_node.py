@@ -1,5 +1,14 @@
 #Guining Pertin
-#Motion planner node - 14-05-20
+#Motion planner node - 13-05-20
+
+'''
+This node generates the motion plan for any robot
+given the current position and goal
+Subscribed topics:
+    mopat/config_space          -   sensor_msgs/Image (Bool)
+Published topics:
+    mopat/motion_plan           -   std_msgs/String #ToBeChanged
+'''
 
 #Import libraries
 #ROS
@@ -11,6 +20,7 @@ from std_msgs.msg import String
 import sys
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 
 #MoPAT alogirithm files
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../")
@@ -20,8 +30,8 @@ from algorithms.mopat_astar import Astar
 got_config_space = False
 index = 0
 screen_size = None
-start = (0,0)
-goal = (99,99)
+start = (50,100)
+goal = (450,300)
 
 #CvBridge object required for conversion
 bridge = CvBridge()
@@ -48,7 +58,8 @@ def motion_planner_node():
     '''
     global config_space
     #Initialize node
-    rospy.init_node("motion_planner_node", anonymous = True)
+    rospy.init_node("motion_planner_node")
+    print("LOG: Started A* Motion Plan Generator node")
     #Subscribe to config_space data - Image
     rospy.Subscriber("mopat/config_space", Image, config_space_cb)
     #Publish motion plan
@@ -66,6 +77,7 @@ def motion_planner_node():
                                                        goal[0])
             motion_plan = (plan_x, plan_y)
             pub.publish("Done")
+            rate.sleep()
 
 
 if __name__ == "__main__":
