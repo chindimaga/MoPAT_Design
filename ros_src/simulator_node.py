@@ -5,9 +5,10 @@
 This node runs the entire simulation(only)
 Subcribed topics:
     mopat/robot_postion     -   std_msgs/String #ToBeChanged
-    mopat/user_input        -   std_msgs/String #ToBeChanged
+    mopat/robot_info        -   std_msgs
 Published topics:
     mopat/raw_image         -   sensor_msgs/Image (BGR)
+    mopat/robot_info        -   std_msgs/??
 '''
 
 #Import libraries
@@ -18,122 +19,107 @@ from sensor_msgs.msg import Image
 from std_msgs.msg import String
 #Others
 import sys
-import pygame
-from pygame.locals import *
-import pymunk
-from pymunk import pygame_util
 import numpy as np
 import os
+#Mopat
+from mopat_lib import *
 
+#Global varibales
 screen_size = (500,500)
 steps = 50
+got_starts = False
+got_goals = False
 bridge = CvBridge()
-
-def add_static_obstacle(space, pos, size):
-    '''
-    Function to generate static obstacle
-    Arguments:
-        space   : pymunk space object
-        pos     : (posx, posy) tuple
-        size    : (sizex, sizey) tuple
-    Returns:
-        shape   : static obstacle shape
-    '''
-    #Create static body
-    body = pymunk.Body(body_type = pymunk.Body.STATIC)
-    body.position = pos[0] + size[0]/2, pos[1] + size[1]/2
-    if body.position[0] < 0 or body.position[1] < 0: return 0
-    #Create box shape
-    shape = pymunk.Poly.create_box(body, size, 0.0)
-    shape.color = pygame.color.THECOLORS["white"]
-    #Add the object
-    space.add(body, shape)
-
-def generate_random_map():
-    '''
-    Function to generate random maps for simulations
-    '''
-    return 0
-
-def generate_test_map(space):
-    '''
-    Function to generate a predefined map
-    Arguments:
-        space   : pymunk space object
-    '''
-    #Create borders
-    add_static_obstacle(space, (0,0), (5,500))
-    add_static_obstacle(space, (0,0), (500,5))
-    add_static_obstacle(space, (495,0), (5,500))
-    add_static_obstacle(space, (0,495), (500,5))
-    #Create random obstacles
-    add_static_obstacle(space, (90,5), (20,400))
-    add_static_obstacle(space, (90,400), (90,20))
-    add_static_obstacle(space, (380,220), (20,300))
-    add_static_obstacle(space, (250,80), (20,350))
-    add_static_obstacle(space, (250,80), (150,20))
-
-def conv2matrix(screen, space, draw_options):
-    '''
-    Function to convert pygame window to numpy matrix
-    Arguments:
-        screen          : pygame screen object
-        space           : pymunk space object
-        draw_options    : pymunk draw options
-    Returns:
-        window_matrix   : numpy matrix of size screen_size
-    '''
-    screen.fill((0,0,0))
-    space.debug_draw(draw_options)
-    window_matrix = np.array(pygame.surfarray.array3d(screen))
-    window_matrix = window_matrix[..., ::-1]
-    window_matrix = np.flip(np.rot90(window_matrix, 1),0)
-    return window_matrix
+robot_shapes = {}
+robot_starts = {}
+robot_goals = {}
 
 def simulator_node():
     '''
     Function to run the simulation
     '''
-    global screen_size
+    global got_starts
+    global got_goals
+    global robot_info
     #Game initialization
-    os.environ['SDL_VIDEO_WINDOW_POS'] = "+100,+100"
     pygame.init()
     pygame.display.set_caption("MoPAT Multi-Robot Simulator MkII")
     screen = pygame.display.set_mode(screen_size)
     draw_options = pymunk.pygame_util.DrawOptions(screen)
     clock = pygame.time.Clock()
     #Create space
-    space = pymunk.Space(threaded = True)
-    space.threads = 2
+    space = pymunk.Space()
     #Create node
     rospy.init_node("simulator_node")
     print("LOG: Started MoPAT Multi-Robot Simulator MkII node")
+    got_mouse_click = False
+    robot_index = 0
     #Subscribe to individual robot controller
     ####################################################
     #Publish simulator raw image
-    pub = rospy.Publisher("mopat/raw_image", Image, queue_size=5)
+    pub_raw = rospy.Publisher("mopat/raw_image", Image, queue_size=5)
     #Create map
     generate_test_map(space)
+    print("USER: Enter initial positions now")
     #Run the simulator
     while not rospy.is_shutdown():
-
-        #Exiting the simulator
         for event in pygame.event.get():
+            #Exiting
             if event.type == QUIT:
                 print("LOG: Exiting simulation")
                 sys.exit(0)
             elif event.type == KEYDOWN and (event.key in [K_ESCAPE, K_q]):
                 print("LOG: Exiting simulation")
                 sys.exit(0)
+            #Get user input
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                mouse_y = screen_size[1] - mouse_y
+                got_mouse_click = True
+            if (event.type == KEYDOWN) and (event.key == K_w) and not got_goals:
+                print("USER: Enter goals now")
+                robot_index = 0
+                got_starts = True   #Take goals
+            elif (event.type == KEYDOWN) and (event.key == K_s) and got_starts and not got_goals:
+                if robot_index != len(robot_starts):
+                    print("USER: Goals != Robots, Please enter again!")
+                    robot_index = 0
+                    continue
+                print("LOG: Starting simulation...")
+                got_goals = True    #Start simulation
         #Update screen
         screen.fill((0,0,0))
         space.step(1/steps)
         space.debug_draw(draw_options)
+        #Until goals are found
+        if not got_goals:
+            #If mouse click found
+            if got_mouse_click:
+                #If not all starts found
+                if not got_starts:
+                    robot_starts[robot_index] = (mouse_x, mouse_y)
+                    print("LOG: Got Robot", robot_index,
+                          "Start:", mouse_x,";",mouse_y)
+                    robot_shapes[robot_index] = add_robot(space,
+                                                         (mouse_x,
+                                                          mouse_y),
+                                                         colors[robot_index])
+                    robot_index += 1
+                #Otherwise get goals
+                else:
+                    robot_goals[robot_index] = (mouse_x, mouse_y)
+                    print("LOG: Got Robot", robot_index,
+                          "Goal:", mouse_x,";",mouse_y)
+                    robot_index += 1
+                got_mouse_click = False
+        if got_starts:
+            for i in range(robot_index):
+                draw_goal(screen, screen_size, robot_goals[i], i)
+        pygame.display.flip()
         #Get raw iamge
         raw_image = conv2matrix(screen, space, draw_options)
         #Publish raw data
-        pub.publish(bridge.cv2_to_imgmsg(raw_image, encoding="passthrough"))
-        pygame.display.flip()
+        pub_raw.publish(bridge.cv2_to_imgmsg(raw_image, encoding="passthrough"))
         clock.tick(steps)
         # print(clock.get_fps())
 

@@ -5,9 +5,8 @@
 This node generates the configuration space for the given occ_map
 Subscribed topics:
     mopat/occ_map           -   sensor_msgs/Image (Bool)
-    mopat/user_input        -   std_msgs/String #ToBeChanged
 Published topics:
-    mopat/config_space      -   sensor_msgs/Image (Bool)
+    mopat/static_config      -   sensor_msgs/Image (Bool)
 '''
 
 #Import libraries
@@ -48,14 +47,6 @@ def occ_map_cb(data):
         print("LOG: Got occupancy map")
         got_occ_map = True
 
-def user_input_cb(data):
-    '''
-    Decode user_input data
-    Arguments:
-        data    :   ROS std_msgs/String
-    '''
-    return 0
-
 def config_space_node():
     '''
     Create configuration space node
@@ -63,13 +54,11 @@ def config_space_node():
     global occ_map
     #Initialize node
     rospy.init_node("config_space_node")
-    print("LOG: Started Configuration Space Generator node")
+    print("LOG: Started Static Configuration Space Generator node")
     #Subscribe to occupancy map data - Image
     rospy.Subscriber("/mopat/occ_map", Image, occ_map_cb)
-    #Subscribe to user input - String
-    rospy.Subscriber("/mopat/user_input", String, user_input_cb)
     #Publish configuration space
-    pub = rospy.Publisher("mopat/config_space", Image, queue_size=5)
+    pub = rospy.Publisher("mopat/static_config", Image, queue_size=5)
     #Set rate
     rate = rospy.Rate(1)
     while not rospy.is_shutdown():
