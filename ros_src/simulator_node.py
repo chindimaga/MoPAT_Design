@@ -3,12 +3,12 @@
 
 '''
 This node runs the entire simulation(only)
-Subcribed topics:
-    mopat/robot_info        -   std_msgs
 Published topics:
     mopat/raw_image         -   sensor_msgs/Image (BGR)
     mopat/robot_starts      -   std_msgs/UInt32MultiArray
     mopat/robot_goals       -   std_msgs/UInt32MultiArray
+    mopat/robot_positions   -   std_msgs/UInt32MultiArray
+    mopat/robot_num         -   std_msgs/UInt32
 '''
 
 #Import libraries
@@ -17,7 +17,7 @@ import rospy
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
-from std_msgs.msg import UInt32MultiArray
+from std_msgs.msg import UInt32MultiArray, UInt32
 #Others
 import sys
 import numpy as np
@@ -60,6 +60,7 @@ def simulator_node():
     pub_starts = rospy.Publisher("mopat/robot_starts", UInt32MultiArray, queue_size=5)
     pub_goals = rospy.Publisher("mopat/robot_goals", UInt32MultiArray, queue_size=5)
     pub_positions = rospy.Publisher("mopat/robot_positions", UInt32MultiArray, queue_size=5)
+    pub_num = rospy.Publisher("mopat/robot_num", UInt32, queue_size=5)
     #Create map
     generate_test_map(space)
     print("USER: Enter initial positions now")
@@ -140,6 +141,7 @@ def simulator_node():
         pub_starts.publish(starts_multiarray)
         pub_goals.publish(goals_multiarray)
         pub_positions.publish(positions_multiarray)
+        pub_num.publish(len(robot_list))
         #Clear
         positions_multiarray.data.clear()
         clock.tick(steps)

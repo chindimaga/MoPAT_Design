@@ -8,6 +8,7 @@ Subscribed_topics:
     mopat/robot_starts          -   std_msgs/UInt32MultiArray
     mopat/robot_goals           -   std_msgs/UInt32MultiArray
     mopat/robot_positions       -   std_msgs/UInt32MultiArray
+    mopat/robot_num             -   std_msgs/UInt32
 Starts_nodes:
     motion_planner_nodes for each robot
     robot_controller for each robot
@@ -15,31 +16,15 @@ Starts_nodes:
 #Import libraries
 #ROS
 import rospy
-from std_msgs.msg import UInt32MultiArray
+from std_msgs.msg import UInt32MultiArray, UInt32
 #Other
 import numpy as np
+#MoPAT
 
+robot_num = 0
 robot_starts    = {}
 robot_goals     = {}
 robot_positions = {}
-
-def robot_starts_cb(data):
-    '''
-    Arguments:
-        data    :   ROS std_msgs/UInt32MultiArray
-    '''
-    global robot_starts
-    for i in range(0,len(data.data),2):
-        robot_starts[i] = (data.data[i], data.data[i+1])
-
-def robot_goals_cb(data):
-    '''
-    Arguments:
-        data    :   ROS std_msgs/UInt32MultiArray
-    '''
-    global robot_goals
-    for i in range(0,len(data.data),2):
-        robot_goals[i] = (data.data[i], data.data[i+1])
 
 def robot_positions_cb(data):
     '''
@@ -50,6 +35,23 @@ def robot_positions_cb(data):
     for i in range(0,len(data.data),2):
         robot_positions[i] = (data.data[i], data.data[i+1])
 
+def robot_goals_cb(data):
+    '''
+    Arguments:
+        data    :   ROS std_msgs/UInt32MultiArray
+    '''
+    global robot_goals
+    for i in range(0,len(data.data),2):
+        robot_goals[i] = (data.data[i], data.data[i+1])
+
+def robot_num_cb(data):
+    '''
+    Arguments:
+        data    :   ROS std_msgs/UInt32
+    '''
+    global robot_num
+    robot_num = data.data
+
 def multi_robot_coordinator_node():
     '''
     Create Multi-Robot Coordinator Node
@@ -58,11 +60,15 @@ def multi_robot_coordinator_node():
     rospy.init_node("multi_robot_coordinator_node")
     print("LOG: Starting Multi-Robot Coordinator Node")
     #Set subscribers
-    rospy.Subscriber("/mopat/robot_starts", UInt32MultiArray, robot_starts_cb)
     rospy.Subscriber("/mopat/robot_goals", UInt32MultiArray, robot_goals_cb)
     rospy.Subscriber("/mopat/robot_positions", UInt32MultiArray, robot_positions_cb)
+    rospy.Subscriber("/mopat/robot_num", UInt32, robot_num_cb)
     while not rospy.is_shutdown():
-        rospy.spin()
+        #Basically when simulation starts
+        if len(robot_goals) == robot_num and robot_num != 0:
+            #Start robot_num number of motion planners
+            motion_planner_node
+
 
 if __name__ == "__main__":
     try:
