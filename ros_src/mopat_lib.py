@@ -158,6 +158,9 @@ class Robot(Thread):
                          (self.goal[0]-10, screen_size[1]-self.goal[1]+10),
                          (self.goal[0]+10, screen_size[1]-self.goal[1]-10),
                          5)
+    def get_pos(self):
+        return self.body.position
+
     def run(self):
         '''
         Thread run

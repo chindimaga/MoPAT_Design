@@ -37,10 +37,13 @@ def simulator_node():
     starts_multiarray = UInt32MultiArray()
     robot_goals = {}
     goals_multiarray = UInt32MultiArray()
+    positions_multiarray = UInt32MultiArray()
     #Flags
     got_starts = False
     got_goals = False
     started = False
+    got_mouse_click = False
+    robot_index = 0
     #Game initialization
     pygame.init()
     pygame.display.set_caption("MoPAT Multi-Robot Simulator MkII")
@@ -52,12 +55,11 @@ def simulator_node():
     #Create node
     rospy.init_node("simulator_node")
     print("LOG: Started MoPAT Multi-Robot Simulator MkII node")
-    got_mouse_click = False
-    robot_index = 0
     #Publishers
     pub_raw = rospy.Publisher("mopat/raw_image", Image, queue_size=5)
     pub_starts = rospy.Publisher("mopat/robot_starts", UInt32MultiArray, queue_size=5)
     pub_goals = rospy.Publisher("mopat/robot_goals", UInt32MultiArray, queue_size=5)
+    pub_positions = rospy.Publisher("mopat/robot_positions", UInt32MultiArray, queue_size=5)
     #Create map
     generate_test_map(space)
     print("USER: Enter initial positions now")
@@ -81,11 +83,6 @@ def simulator_node():
                 robot_index = 0
                 goals_multiarray.data.clear()
                 got_starts = True   #Take goals
-        #Update screen
-        screen.fill((0,0,0))
-        space.step(1/steps)
-        space.debug_draw(draw_options)
-        #Until goals are found
         if not got_goals:
             #If mouse click found
             if got_mouse_click:
@@ -116,16 +113,24 @@ def simulator_node():
                         print("USER: The point lies within an obstacle")
 
                 got_mouse_click = False
-        #If goals are found start simulation
         else:
             if not started:
                 print("LOG: Starting Simulation...")
                 for i in robot_list:
                     robot_list[i].start()
                 started = True
+            #If simulation started
+        #Update screen
+        screen.fill((0,0,0))
+        space.step(1/steps)
+        space.debug_draw(draw_options)
         if got_starts:
             for i in range(robot_index):
                 robot_list[i].draw_goal(screen)
+                pos = robot_list[i].get_pos()
+                #Get positions
+                positions_multiarray.data.append(int(pos[0]))
+                positions_multiarray.data.append(int(pos[1]))
         pygame.display.flip()
         #Get raw iamge
         raw_image = conv2matrix(screen, space, draw_options)
@@ -134,6 +139,9 @@ def simulator_node():
         #Publish robot information
         pub_starts.publish(starts_multiarray)
         pub_goals.publish(goals_multiarray)
+        pub_positions.publish(positions_multiarray)
+        #Clear
+        positions_multiarray.data.clear()
         clock.tick(steps)
         # print(clock.get_fps())
 
