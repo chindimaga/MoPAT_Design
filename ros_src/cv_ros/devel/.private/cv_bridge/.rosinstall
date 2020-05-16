@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/otoshuki/cv_ros/devel/.private/cv_bridge/setup.sh

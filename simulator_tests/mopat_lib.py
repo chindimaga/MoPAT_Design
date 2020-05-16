@@ -22,6 +22,7 @@ from algorithms.mopat_astar import Astar
 screen_size = (500,500)
 robot_starts = {0: (200,200), 1: (50, 100), 2: (200,50)}
 robot_goals = {0: (450,300), 1: (450, 100), 2: (450, 180)}
+steps = 50
 
 #Global variables
 config_space_generated = False
@@ -390,7 +391,8 @@ def simulation():
     draw_options = pymunk.pygame_util.DrawOptions(screen)
     clock = pygame.time.Clock()
     #Create space
-    space = pymunk.Space()
+    space = pymunk.Space(threaded = True)
+    space.threads = 2
     #Create robots
     for i in robot_starts:
         robots[i] = Robot(i, space, robot_starts[i], robot_goals[i])
@@ -422,7 +424,9 @@ def simulation():
         screen.fill((0,0,0))
         for i in robots:
             robots[i].draw_goal(screen)
-        space.step(1/50.0)
+        for i in range(steps):
+            space.step(1/50/steps)
         space.debug_draw(draw_options)
         pygame.display.flip()
-        clock.tick(50)
+        time_taken = clock.tick(50)
+        # print(clock.get_fps())
