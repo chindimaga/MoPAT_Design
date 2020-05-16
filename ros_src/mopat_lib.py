@@ -4,7 +4,9 @@ from pygame.locals import *
 import pymunk
 from pymunk import pygame_util
 import numpy as np
+from threading import Thread
 
+screen_size = (500,500)
 #Colors
 colors = ["red", "blue", "brown", "lawngreen",
           "gold" , "violet","blueviolet", "orange",
@@ -114,3 +116,50 @@ def draw_goal(screen, screen_size, goal, index):
                      (goal[0]-10, screen_size[1]-goal[1]+10),
                      (goal[0]+10, screen_size[1]-goal[1]-10),
                      5)
+
+class Robot(Thread):
+    '''
+    The robot class
+    Parameters:
+        body            : robot body object
+        index           : robot predefined index
+        init_pos        : starting location
+        goal            : goal location
+        map             : the screen matrix
+    '''
+    def __init__(self, index, space, pos):
+        '''
+        Well, initialize
+        '''
+        super(Robot, self).__init__()
+        self.shape = add_robot(space, pos, colors[index])
+        self.body = self.shape.body
+        self.index = index
+        self.init_pos = pos
+        self.screen_size = screen_size
+
+    def set_goal(self, goal):
+        self.goal = goal
+
+    def draw_goal(self, screen):
+        '''
+        Function to draw each agent's goal position
+        Arguments:
+            screen          : pygame screen object
+            screen_size     : (size_x, size_y)
+            goal            : goal position
+            index           : robot's index for color
+        '''
+        pygame.draw.line(screen, pygame.color.THECOLORS[colors[self.index]],
+                         (self.goal[0]-10, screen_size[1]-self.goal[1]-10),
+                         (self.goal[0]+10, screen_size[1]-self.goal[1]+10),
+                         5)
+        pygame.draw.line(screen, pygame.color.THECOLORS[colors[self.index]],
+                         (self.goal[0]-10, screen_size[1]-self.goal[1]+10),
+                         (self.goal[0]+10, screen_size[1]-self.goal[1]-10),
+                         5)
+    def run(self):
+        '''
+        Thread run
+        '''
+        return 0
