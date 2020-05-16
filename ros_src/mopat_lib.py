@@ -114,5 +114,3 @@ def draw_goal(screen, screen_size, goal, index):
                      (goal[0]-10, screen_size[1]-goal[1]+10),
                      (goal[0]+10, screen_size[1]-goal[1]-10),
                      5)
-
-def
