@@ -137,6 +137,7 @@ class Robot(Thread):
         self.index = index
         self.init_pos = pos
         self.screen_size = screen_size
+        self.robot_plan = {}
 
     def set_goal(self, goal):
         self.goal = goal
@@ -160,6 +161,15 @@ class Robot(Thread):
                          5)
     def get_pos(self):
         return self.body.position
+
+    def motion_plan_cb(self, data):
+        '''
+        Arguments:
+            data    :   ROS std_msgs/UInt32MultiArray
+        '''
+        print("Got robot",self.index, "motion_plan")
+        for i in range(0,len(data.data)//2):
+            self.robot_plan[i] = (data.data[i*2], data.data[i*2+1])
 
     def run(self):
         '''

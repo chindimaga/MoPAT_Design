@@ -44,7 +44,7 @@ class Astar(Thread):
 
         explore, Visited = dict(), dict()
         explore[self.calc_index(start_node)] = start_node
-        print("LOG: A*: Robot_", self.robot_index," Finding Best Route")
+        print("LOG: A*: Robot", self.robot_index," Finding Best Route")
         while 1:
             if not bool(explore):
                 self.path=False

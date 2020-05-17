@@ -7,7 +7,7 @@ given the current position and goal
 Subscribed topics:
     mopat/static_config          -   sensor_msgs/Image (Bool)
 Published topics:
-    mopat/motion_plan           -   std_msgs/String #ToBeChanged
+    mopat/motion_plan_{i}        -   std_msgs/UInt32MultiArrays
 '''
 
 #Import libraries
@@ -20,6 +20,7 @@ from std_msgs.msg import UInt32MultiArray, UInt32
 #Others
 import sys
 import os
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 from threading import Thread
@@ -34,8 +35,9 @@ all_threads_started = False
 static_config = None
 screen_size = None
 robot_num = 0
-robot_starts    = {}
-robot_goals     = {}
+robot_starts = {}
+robot_goals  = {}
+motion_plans = {}
 #CvBridge object required for conversion
 bridge = CvBridge()
 
@@ -81,6 +83,15 @@ def robot_num_cb(data):
     global robot_num
     robot_num = data.data
 
+def convplan2multiarray(robot_index, px, py):
+    global motion_plans
+    #Set as UInt32MultiArray
+    motion_plans[robot_index] = UInt32MultiArray()
+    for i in range(len(px)):
+        #Append data in x,y form
+        motion_plans[robot_index].data.append(px[i])
+        motion_plans[robot_index].data.append(py[i])
+
 def motion_planner_node():
     '''
     Create notion planner node
@@ -116,7 +127,7 @@ def motion_planner_node():
                     robot_planners[i].start()
                     #Set publisher
                     robot_publishers[i] = rospy.Publisher("mopat/motion_plan_{0}".format(i),
-                                                          String, queue_size=5)
+                                                          UInt32MultiArray, queue_size=5)
                 #All threads started
                 all_threads_started = True
         #If done with planners
@@ -125,7 +136,12 @@ def motion_planner_node():
             for i in range(robot_num):
                 #If path has been generated publish it
                 if robot_planners[i].path and robot_planners[i].plan_done:
-                    robot_publishers[i].publish("Done")
+                    #If plans done, convert plan to multiarray format
+                    convplan2multiarray(i, robot_planners[i].px, robot_planners[i].py)
+                    robot_publishers[i].publish(motion_plans[i])
+            #If threads started, publish at a slower rate
+            time.sleep(10)
+        rate.sleep()
 
 if __name__ == "__main__":
     try:

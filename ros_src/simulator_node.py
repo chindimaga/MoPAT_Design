@@ -3,6 +3,8 @@
 
 '''
 This node runs the entire simulation(only)
+Subscribed topics:
+    mopat/motion_plan_{i}        -   std_msgs/UInt32MultiArrays
 Published topics:
     mopat/raw_image         -   sensor_msgs/Image (BGR)
     mopat/robot_starts      -   std_msgs/UInt32MultiArray
@@ -95,6 +97,10 @@ def simulator_node():
                     # robot_starts[robot_index] = (mouse_x, mouse_y)
                     starts_multiarray.data.append(mouse_x)
                     starts_multiarray.data.append(mouse_y)
+                    #Start subscribers to motion plans for individual robots
+                    rospy.Subscriber("/mopat/motion_plan_{0}".format(robot_index),
+                                      UInt32MultiArray,
+                                      robot_list[robot_index].motion_plan_cb)
                     robot_index += 1
                 #Otherwise get goals
                 else:
