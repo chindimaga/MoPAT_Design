@@ -14,3 +14,6 @@ if __name__ == "__main__":
     time.sleep(0.5)
     subprocess.call(['gnome-terminal', '--', 'python', 'multi_robot_coordinator_node.py'])
     print("LOG: Starting Multi-Robot Coordinator Node")
+    time.sleep(0.5)
+    subprocess.call(['gnome-terminal', '--', 'python', 'motion_planner_node.py'])
+    print("LOG: Starting Motion Planner Node")

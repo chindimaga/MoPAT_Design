@@ -405,6 +405,7 @@ def simulation():
     #Start robot global controller threads
     for i in robots:
         robots[i].start()
+        print(robots[i])
     # Simulator graphic loop
     while True:
         #Exiting the simulator

@@ -61,8 +61,8 @@ def robot_starts_cb(data):
         data    :   ROS std_msgs/UInt32MultiArray
     '''
     global robot_starts
-    for i in range(0,len(data.data),2):
-        robot_starts[i] = (data.data[i], data.data[i+1])
+    for i in range(0,len(data.data)//2):
+        robot_starts[i] = (data.data[i*2], data.data[i*2+1])
 
 def robot_goals_cb(data):
     '''
@@ -70,8 +70,8 @@ def robot_goals_cb(data):
         data    :   ROS std_msgs/UInt32MultiArray
     '''
     global robot_goals
-    for i in range(0,len(data.data),2):
-        robot_goals[i] = (data.data[i], data.data[i+1])
+    for i in range(0,len(data.data)//2):
+        robot_goals[i] = (data.data[i*2], data.data[i*2+1])
 
 def robot_num_cb(data):
     '''
@@ -102,25 +102,25 @@ def motion_planner_node():
     #Set rate
     rate = rospy.Rate(1)
     while not rospy.is_shutdown():
-        #Basically if config_space is found and simulation has started
-        if got_static_config and len(robot_goals) == robot_num and robot_num != 0:
-            for i in range(robot_num):
-                #New planner for each robot
-                robot_planners[i] = Astar(i, static_config, 0, 0,
-                                          screen_size[1], screen_size[0])
-                #Set the start and goal locations
-                robot_planners[i].set_params(robot_starts[i], robot_goals[i], screen_size)
-                #Run threads
-                print(robot_planners[i])
-                robot_planners[i].start()
-                #Set publisher
-                robot_publishers[i] = rospy.Publisher("mopat/motion_plan_{0}".format(i),
-                                                      String, queue_size=5)
-            #All threads started
-            all_threads_started = True
+        #Basically if config_space is found and threads not started yet
+        if got_static_config and not all_threads_started:
+            #If simulation has started
+            if len(robot_goals) == robot_num and robot_num != 0:
+                for i in range(robot_num):
+                    #New planner for each robot
+                    robot_planners[i] = Astar(i, static_config, 0, 0,
+                                              screen_size[1], screen_size[0])
+                    #Set the start and goal locations
+                    robot_planners[i].set_params(robot_starts[i], robot_goals[i], screen_size)
+                    #Run threads
+                    robot_planners[i].start()
+                    #Set publisher
+                    robot_publishers[i] = rospy.Publisher("mopat/motion_plan_{0}".format(i),
+                                                          String, queue_size=5)
+                #All threads started
+                all_threads_started = True
         #If done with planners
         if all_threads_started:
-            print("Done threads")
             #Check each planner if the path has been generated
             for i in range(robot_num):
                 #If path has been generated publish it
