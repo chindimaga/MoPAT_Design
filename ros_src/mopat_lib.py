@@ -167,7 +167,7 @@ class Robot(Thread):
         Arguments:
             data    :   ROS std_msgs/UInt32MultiArray
         '''
-        print("Got robot",self.index, "motion_plan")
+        print("Got Robot",self.index, "Motion Plan")
         for i in range(0,len(data.data)//2):
             self.robot_plan[i] = (data.data[i*2], data.data[i*2+1])
 

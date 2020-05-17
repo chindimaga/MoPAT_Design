@@ -44,7 +44,7 @@ class Astar(Thread):
 
         explore, Visited = dict(), dict()
         explore[self.calc_index(start_node)] = start_node
-        print("LOG: A*: Robot", self.robot_index," Finding Best Route")
+        print("LOG: A*: Robot", self.robot_index,"Finding Best Route")
         while 1:
             if not bool(explore):
                 self.path=False
@@ -83,9 +83,9 @@ class Astar(Thread):
 
         self.px, self.py = self.calc_final_path(goal_node, Visited)
         if self.path :
-            print("LOG: A*: Robot_", self.robot_index," Path exist")
+            print("LOG: A*: Robot", self.robot_index,"Path exist")
         else:
-            print("LOG: A*: Robot_", self.robot_index," Path does not exist")
+            print("LOG: A*: Robot", self.robot_index,"Path does not exist")
             self.px = [0]
             self.py = [0]
         self.plan_done = True

@@ -140,7 +140,7 @@ def motion_planner_node():
                     convplan2multiarray(i, robot_planners[i].px, robot_planners[i].py)
                     robot_publishers[i].publish(motion_plans[i])
             #If threads started, publish at a slower rate
-            time.sleep(10)
+            time.sleep(5)
         rate.sleep()
 
 if __name__ == "__main__":
