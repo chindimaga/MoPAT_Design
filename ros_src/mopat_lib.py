@@ -137,9 +137,15 @@ class Robot(Thread):
         self.index = index
         self.init_pos = pos
         self.screen_size = screen_size
-        self.robot_plan = {}
+        self.act_pathx = []
+        self.act_pathy = []
+        self.got_motion_plan = False
+        self.robot_reached = 0
 
     def set_goal(self, goal):
+        '''
+        Set the goal paramter
+        '''
         self.goal = goal
 
     def draw_goal(self, screen):
@@ -147,9 +153,6 @@ class Robot(Thread):
         Function to draw each agent's goal position
         Arguments:
             screen          : pygame screen object
-            screen_size     : (size_x, size_y)
-            goal            : goal position
-            index           : robot's index for color
         '''
         pygame.draw.line(screen, pygame.color.THECOLORS[colors[self.index]],
                          (self.goal[0]-10, screen_size[1]-self.goal[1]-10),
@@ -159,7 +162,11 @@ class Robot(Thread):
                          (self.goal[0]-10, screen_size[1]-self.goal[1]+10),
                          (self.goal[0]+10, screen_size[1]-self.goal[1]-10),
                          5)
+
     def get_pos(self):
+        '''
+        Get robot current position
+        '''
         return self.body.position
 
     def motion_plan_cb(self, data):
@@ -168,11 +175,56 @@ class Robot(Thread):
             data    :   ROS std_msgs/UInt32MultiArray
         '''
         print("Got Robot",self.index, "Motion Plan")
+        #First check if path wasn't found
         for i in range(0,len(data.data)//2):
-            self.robot_plan[i] = (data.data[i*2], data.data[i*2+1])
+            #Following the list from normal simulator
+            #Adjustments for Pymunk
+            self.act_pathx.insert(0, data.data[i*2])
+            self.act_pathy.insert(0, screen_size[1] - data.data[i*2+1])
+            # self.robot_plan.append((data.data[i*2], data.data[i*2+1]))
+        self.got_motion_plan = True
+
+    def holo_move_robot(self, vel):
+        '''
+        Function for holonomic control
+        '''
+        self.body.velocity = vel
+
+    def basic_robot_controller(self):
+        '''
+        Basic holonomic robot controller function
+        '''
+        #Constant velocity, angle controlled
+        print("LOG: Robot", self.index, "Starting motion")
+        #Get angle
+        (curr_x, curr_y) = self.get_pos()
+        for (x,y) in zip(self.act_pathx[1:], self.act_pathy[1:]):
+            #atan2 to get angle
+            head_angle = np.arctan2(y-curr_y,x-curr_x)
+            #set velocity
+            self.holo_move_robot((80*np.cos(head_angle),
+                             80*np.sin(head_angle)))
+            #Update global positions
+            # (curr_x, curr_y) =
+            #wait until robot reaches the selected point
+            while not ((int(x-curr_x) == 0) and (int(y-curr_y) == 0)):
+                #update loc until reached
+                (curr_x, curr_y) = self.get_pos()
+                continue
+        #If goal reached, stop
+        self.holo_move_robot((0,0))
+        print("LOG: Robot", self.index, "Goal reached")
+        self.robot_reached = 1
 
     def run(self):
         '''
         Thread run
         '''
-        return 0
+        #Wait until motion plan is found
+        while not self.got_motion_plan:
+            continue
+        #If path wasn't found:
+        if self.act_pathx[0] == 99999:
+            print("Robot", self.index, "No Path Found! Stopping!")
+            return 0
+        self.basic_robot_controller()

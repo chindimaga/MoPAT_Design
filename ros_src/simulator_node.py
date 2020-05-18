@@ -24,6 +24,7 @@ from std_msgs.msg import UInt32MultiArray, UInt32
 import sys
 import numpy as np
 import os
+import time
 #Mopat
 from mopat_lib import *
 
@@ -131,13 +132,22 @@ def simulator_node():
         screen.fill((0,0,0))
         space.step(1/steps)
         space.debug_draw(draw_options)
+        #After it starts
         if got_starts:
+            robot_reached_list = []
             for i in range(robot_index):
                 robot_list[i].draw_goal(screen)
                 pos = robot_list[i].get_pos()
+                robot_reached_list.append(robot_list[i].robot_reached)
                 #Get positions
                 positions_multiarray.data.append(int(pos[0]))
                 positions_multiarray.data.append(int(pos[1]))
+                #Also check if the motion plans have been found
+            if sum(robot_reached_list) == robot_index and robot_index != 0:
+                print("All Robots Reached, Simulation Completed!")
+                print("LOG: Exiting simulation in 5s")
+                time.sleep(5)
+                sys.exit(0)
         pygame.display.flip()
         #Get raw iamge
         raw_image = conv2matrix(screen, space, draw_options)

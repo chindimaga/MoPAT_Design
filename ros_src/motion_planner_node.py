@@ -98,6 +98,7 @@ def motion_planner_node():
     '''
     global static_config
     global all_threads_started
+    global motion_plans
     #Storage variables
     robot_planners   = {}
     robot_publishers = {}
@@ -137,7 +138,11 @@ def motion_planner_node():
                 #If path has been generated publish it
                 if robot_planners[i].path and robot_planners[i].plan_done:
                     #If plans done, convert plan to multiarray format
-                    convplan2multiarray(i, robot_planners[i].px, robot_planners[i].py)
+                    convplan2multiarray(i, robot_planners[i].py, robot_planners[i].px)
+                    robot_publishers[i].publish(motion_plans[i])
+                #Check if the path wasn't found
+                elif not robot_planners[i].path and robot_planners[i].plan_done:
+                    convplan2multiarray(i, [99999], [99999])
                     robot_publishers[i].publish(motion_plans[i])
             #If threads started, publish at a slower rate
             time.sleep(5)
