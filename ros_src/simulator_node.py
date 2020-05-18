@@ -24,7 +24,6 @@ from std_msgs.msg import UInt32MultiArray, UInt32
 import sys
 import numpy as np
 import os
-import time
 #Mopat
 from mopat_lib import *
 
@@ -48,6 +47,7 @@ def simulator_node():
     got_mouse_click = False
     robot_index = 0
     #Game initialization
+    os.environ['SDL_VIDEO_WINDOW_POS'] = "+0,+50"
     pygame.init()
     pygame.display.set_caption("MoPAT Multi-Robot Simulator MkII")
     screen = pygame.display.set_mode(screen_size)
@@ -146,7 +146,7 @@ def simulator_node():
             if sum(robot_reached_list) == robot_index and robot_index != 0:
                 print("All Robots Reached, Simulation Completed!")
                 print("LOG: Exiting simulation in 5s")
-                time.sleep(5)
+                rospy.sleep(5)
                 sys.exit(0)
         pygame.display.flip()
         #Get raw iamge

@@ -58,7 +58,7 @@ def multi_robot_coordinator_node():
     '''
     #Initialize node
     rospy.init_node("multi_robot_coordinator_node")
-    print("LOG: Starting Multi-Robot Coordinator Node")
+    print("LOG: Started Multi-Robot Coordinator Node")
     #Set subscribers
     rospy.Subscriber("/mopat/robot_goals", UInt32MultiArray, robot_goals_cb)
     rospy.Subscriber("/mopat/robot_positions", UInt32MultiArray, robot_positions_cb)

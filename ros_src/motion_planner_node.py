@@ -20,7 +20,6 @@ from std_msgs.msg import UInt32MultiArray, UInt32
 #Others
 import sys
 import os
-import time
 import numpy as np
 import matplotlib.pyplot as plt
 from threading import Thread
@@ -145,7 +144,7 @@ def motion_planner_node():
                     convplan2multiarray(i, [99999], [99999])
                     robot_publishers[i].publish(motion_plans[i])
             #If threads started, publish at a slower rate
-            time.sleep(5)
+            rospy.sleep(5)
         rate.sleep()
 
 if __name__ == "__main__":

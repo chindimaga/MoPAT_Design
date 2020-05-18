@@ -19,7 +19,6 @@ from std_msgs.msg import String
 import sys
 import os
 import numpy as np
-import matplotlib.pyplot as plt
 
 #MoPAT alogirithm files
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../")
@@ -54,7 +53,7 @@ def config_space_node():
     global occ_map
     #Initialize node
     rospy.init_node("config_space_node")
-    print("LOG: Started Static Configuration Space Generator node")
+    print("LOG: Started Configuration Space Generator node")
     #Subscribe to occupancy map data - Image
     rospy.Subscriber("/mopat/occ_map", Image, occ_map_cb)
     #Publish configuration space
