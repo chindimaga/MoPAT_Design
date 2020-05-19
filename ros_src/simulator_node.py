@@ -3,12 +3,14 @@
 
 '''
 This node runs the entire simulation(only)
-Subcribed topics:
-    mopat/robot_info        -   std_msgs
+Subscribed topics:
+    mopat/motion_plan_{i}        -   std_msgs/UInt32MultiArrays
 Published topics:
     mopat/raw_image         -   sensor_msgs/Image (BGR)
     mopat/robot_starts      -   std_msgs/UInt32MultiArray
     mopat/robot_goals       -   std_msgs/UInt32MultiArray
+    mopat/robot_positions   -   std_msgs/UInt32MultiArray
+    mopat/robot_num         -   std_msgs/UInt32
 '''
 
 #Import libraries
@@ -17,7 +19,7 @@ import rospy
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
-from std_msgs.msg import UInt32MultiArray
+from std_msgs.msg import UInt32MultiArray, UInt32
 #Others
 import sys
 import numpy as np
@@ -45,6 +47,7 @@ def simulator_node():
     got_mouse_click = False
     robot_index = 0
     #Game initialization
+    os.environ['SDL_VIDEO_WINDOW_POS'] = "+0,+50"
     pygame.init()
     pygame.display.set_caption("MoPAT Multi-Robot Simulator MkII")
     screen = pygame.display.set_mode(screen_size)
@@ -60,6 +63,7 @@ def simulator_node():
     pub_starts = rospy.Publisher("mopat/robot_starts", UInt32MultiArray, queue_size=5)
     pub_goals = rospy.Publisher("mopat/robot_goals", UInt32MultiArray, queue_size=5)
     pub_positions = rospy.Publisher("mopat/robot_positions", UInt32MultiArray, queue_size=5)
+    pub_num = rospy.Publisher("mopat/robot_num", UInt32, queue_size=5)
     #Create map
     generate_test_map(space)
     print("USER: Enter initial positions now")
@@ -94,6 +98,10 @@ def simulator_node():
                     # robot_starts[robot_index] = (mouse_x, mouse_y)
                     starts_multiarray.data.append(mouse_x)
                     starts_multiarray.data.append(mouse_y)
+                    #Start subscribers to motion plans for individual robots
+                    rospy.Subscriber("/mopat/motion_plan_{0}".format(robot_index),
+                                      UInt32MultiArray,
+                                      robot_list[robot_index].motion_plan_cb)
                     robot_index += 1
                 #Otherwise get goals
                 else:
@@ -124,13 +132,22 @@ def simulator_node():
         screen.fill((0,0,0))
         space.step(1/steps)
         space.debug_draw(draw_options)
+        #After it starts
         if got_starts:
+            robot_reached_list = []
             for i in range(robot_index):
                 robot_list[i].draw_goal(screen)
                 pos = robot_list[i].get_pos()
+                robot_reached_list.append(robot_list[i].robot_reached)
                 #Get positions
                 positions_multiarray.data.append(int(pos[0]))
                 positions_multiarray.data.append(int(pos[1]))
+                #Also check if the motion plans have been found
+            if sum(robot_reached_list) == robot_index and robot_index != 0:
+                print("All Robots Reached, Simulation Completed!")
+                print("LOG: Exiting simulation in 5s")
+                rospy.sleep(5)
+                sys.exit(0)
         pygame.display.flip()
         #Get raw iamge
         raw_image = conv2matrix(screen, space, draw_options)
@@ -140,6 +157,7 @@ def simulator_node():
         pub_starts.publish(starts_multiarray)
         pub_goals.publish(goals_multiarray)
         pub_positions.publish(positions_multiarray)
+        pub_num.publish(len(robot_list))
         #Clear
         positions_multiarray.data.clear()
         clock.tick(steps)
