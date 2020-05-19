@@ -137,8 +137,6 @@ class Robot(Thread):
         self.index = index
         self.init_pos = pos
         self.screen_size = screen_size
-        self.act_pathx = []
-        self.act_pathy = []
         self.got_motion_plan = False
         self.robot_reached = 0
 
@@ -175,6 +173,9 @@ class Robot(Thread):
             data    :   ROS std_msgs/UInt32MultiArray
         '''
         print("Got Robot",self.index, "Motion Plan")
+        #Each time empty the paths
+        self.act_pathx = []
+        self.act_pathy = []
         #First check if path wasn't found
         for i in range(0,len(data.data)//2):
             #Following the list from normal simulator
@@ -198,7 +199,9 @@ class Robot(Thread):
         print("LOG: Robot", self.index, "Starting motion")
         #Get angle
         (curr_x, curr_y) = self.get_pos()
-        for (x,y) in zip(self.act_pathx[1:], self.act_pathy[1:]):
+        pathx2follow = self.act_pathx[1:]
+        pathy2follow = self.act_pathy[1:]
+        for (x,y) in zip(pathx2follow, pathy2follow):
             #atan2 to get angle
             head_angle = np.arctan2(y-curr_y,x-curr_x)
             #set velocity
