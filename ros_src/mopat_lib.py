@@ -4,6 +4,7 @@ from pygame.locals import *
 import pymunk
 from pymunk import pygame_util
 import numpy as np
+import time
 from threading import Thread
 
 screen_size = (500,500)
@@ -172,7 +173,7 @@ class Robot(Thread):
         Arguments:
             data    :   ROS std_msgs/UInt32MultiArray
         '''
-        print("Got Robot",self.index, "Motion Plan")
+        print("LOG: Got Robot",self.index, "Motion Plan")
         #Each time empty the paths
         self.act_pathx = []
         self.act_pathy = []
@@ -225,9 +226,10 @@ class Robot(Thread):
         '''
         #Wait until motion plan is found
         while not self.got_motion_plan:
+            time.sleep(1)
             continue
         #If path wasn't found:
         if self.act_pathx[0] == 99999:
-            print("Robot", self.index, "No Path Found! Stopping!")
+            print("LOG: Robot", self.index, "No Path Found! Stopping!")
             return 0
         self.basic_robot_controller()

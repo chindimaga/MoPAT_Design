@@ -104,7 +104,7 @@ class robot_plan():
                          UInt32MultiArray, self.motion_plan_cb)
 
     def motion_plan_cb(self, data):
-        print("Got Robot",self.index, "Motion Plan")
+        print("LOG: Got Robot",self.index, "Motion Plan")
         #Clean paths every time
         self.gen_pathx = []
         self.gen_pathy = []
