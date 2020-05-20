@@ -5,8 +5,6 @@
 This node coordinates the control of all the robots and also starts individual
 planner nodes
 Subscribed_topics:
-    mopat/robot_starts          -   std_msgs/UInt32MultiArray
-    mopat/robot_goals           -   std_msgs/UInt32MultiArray
     mopat/robot_positions       -   std_msgs/UInt32MultiArray
     mopat/robot_num             -   std_msgs/UInt32
 Starts_nodes:
@@ -35,15 +33,6 @@ def robot_positions_cb(data):
     for i in range(0,len(data.data)//2):
         robot_positions[i] = (data.data[i*2], data.data[i*2+1])
 
-def robot_goals_cb(data):
-    '''
-    Arguments:
-        data    :   ROS std_msgs/UInt32MultiArray
-    '''
-    global robot_goals
-    for i in range(0,len(data.data)//2):
-        robot_goals[i] = (data.data[i*2], data.data[i*2+1])
-
 def robot_num_cb(data):
     '''
     Arguments:
@@ -60,15 +49,12 @@ def multi_robot_coordinator_node():
     rospy.init_node("multi_robot_coordinator_node")
     print("LOG: Started Multi-Robot Coordinator Node")
     #Set subscribers
-    rospy.Subscriber("/mopat/robot_goals", UInt32MultiArray, robot_goals_cb)
     rospy.Subscriber("/mopat/robot_positions", UInt32MultiArray, robot_positions_cb)
     rospy.Subscriber("/mopat/robot_num", UInt32, robot_num_cb)
-    rospy.spin()
-    # while not rospy.is_shutdown():
+    while not rospy.is_shutdown():
         #Basically when simulation starts
         # if len(robot_goals) == robot_num and robot_num != 0:
-        #     #Start robot_num number of motion planners
-        #     motion_planner_node
+        
 
 
 if __name__ == "__main__":
