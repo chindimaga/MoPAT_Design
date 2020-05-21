@@ -5,6 +5,7 @@
 This node runs the entire simulation(only)
 Subscribed topics:
     mopat/motion_plan_{i}        -   std_msgs/UInt32MultiArrays
+    mopat/mrc_output_flags       -   std_msgs/ByteMultiArray
 Published topics:
     mopat/raw_image         -   sensor_msgs/Image (BGR)
     mopat/robot_starts      -   std_msgs/UInt32MultiArray
@@ -19,7 +20,7 @@ import rospy
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
-from std_msgs.msg import UInt32MultiArray, UInt32
+from std_msgs.msg import UInt32MultiArray, UInt32, ByteMultiArray
 #Others
 import sys
 import numpy as np
@@ -27,14 +28,21 @@ import os
 #Mopat
 from mopat_lib import *
 
+robot_list = {}
+
+def mrc_cb(data):
+    global robot_list
+    for i in range(len(data.data)):
+        robot_list[i].mrc_flag = data.data[i]
+
 def simulator_node():
     '''
     Function to run the simulation
     '''
+    global robot_list
     #Variables
     steps = 50
     bridge = CvBridge()
-    robot_list = {}
     robot_starts = {}
     starts_multiarray = UInt32MultiArray()
     robot_goals = {}
@@ -59,6 +67,7 @@ def simulator_node():
     rospy.init_node("simulator_node")
     print("LOG: Started MoPAT Multi-Robot Simulator MkII node")
     #Publishers
+    rospy.Subscriber("/mopat/mrc_output_flags", ByteMultiArray, mrc_cb)
     pub_raw = rospy.Publisher("mopat/raw_image", Image, queue_size=5)
     pub_starts = rospy.Publisher("mopat/robot_starts", UInt32MultiArray, queue_size=5)
     pub_goals = rospy.Publisher("mopat/robot_goals", UInt32MultiArray, queue_size=5)

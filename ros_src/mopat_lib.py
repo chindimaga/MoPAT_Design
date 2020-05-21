@@ -140,6 +140,7 @@ class Robot(Thread):
         self.screen_size = screen_size
         self.got_motion_plan = False
         self.robot_reached = 0
+        self.mrc_flags = 0b00000001
 
     def set_goal(self, goal):
         '''
@@ -203,6 +204,9 @@ class Robot(Thread):
         pathx2follow = self.act_pathx[1:]
         pathy2follow = self.act_pathy[1:]
         for (x,y) in zip(pathx2follow, pathy2follow):
+            #Wait until mrc signal
+            while self.mrc_flag == 0b00000001:
+                time.sleep(1)
             #atan2 to get angle
             head_angle = np.arctan2(y-curr_y,x-curr_x)
             #set velocity
@@ -231,5 +235,6 @@ class Robot(Thread):
         #If path wasn't found:
         if self.act_pathx[0] == 99999:
             print("LOG: Robot", self.index, "No Path Found! Stopping!")
+            self.robot_reached = 1
             return 0
         self.basic_robot_controller()

@@ -6,8 +6,12 @@ This node generates the motion plan for any robot
 given the current position and goal
 Subscribed topics:
     mopat/static_config          -   sensor_msgs/Image (Bool)
+    mopat/robot_starts           -   std_msgs/UInt32MultiArray
+    mopat/robot_goals            -   std_msgs/UInt32MultiArray
+    mopat/robot_num              -   std_msgs/UInt32
 Published topics:
     mopat/motion_plan_{i}        -   std_msgs/UInt32MultiArrays
+    mopat/motion_plans_done      -   std_msgs/Bool
 '''
 
 #Import libraries
@@ -16,7 +20,7 @@ import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from std_msgs.msg import String
-from std_msgs.msg import UInt32MultiArray, UInt32
+from std_msgs.msg import UInt32MultiArray, UInt32, Bool
 #Others
 import sys
 import os
@@ -37,6 +41,8 @@ robot_num = 0
 robot_starts = {}
 robot_goals  = {}
 motion_plans = {}
+motion_plans_done = Bool()
+motion_plans_done.data = False
 #CvBridge object required for conversion
 bridge = CvBridge()
 
@@ -98,6 +104,7 @@ def motion_planner_node():
     global static_config
     global all_threads_started
     global motion_plans
+    global motion_plans_done
     #Storage variables
     robot_planners   = {}
     robot_publishers = {}
@@ -109,6 +116,7 @@ def motion_planner_node():
     rospy.Subscriber("/mopat/robot_starts", UInt32MultiArray, robot_starts_cb)
     rospy.Subscriber("/mopat/robot_goals", UInt32MultiArray, robot_goals_cb)
     rospy.Subscriber("/mopat/robot_num", UInt32, robot_num_cb)
+    pub_done = rospy.Publisher("/mopat/motion_plans_done", Bool, queue_size = 1)
     #Publish motion plan
     #Set rate
     rate = rospy.Rate(1)
@@ -132,6 +140,7 @@ def motion_planner_node():
                 all_threads_started = True
         #If done with planners
         if all_threads_started:
+            motion_plans_completed = 0
             #Check each planner if the path has been generated
             for i in range(robot_num):
                 #If path has been generated publish it
@@ -139,12 +148,20 @@ def motion_planner_node():
                     #If plans done, convert plan to multiarray format
                     convplan2multiarray(i, robot_planners[i].py, robot_planners[i].px)
                     robot_publishers[i].publish(motion_plans[i])
+                    motion_plans_completed += 1
                 #Check if the path wasn't found
                 elif not robot_planners[i].path and robot_planners[i].plan_done:
                     convplan2multiarray(i, [99999], [99999])
                     robot_publishers[i].publish(motion_plans[i])
+                    motion_plans_completed += 1
+            #If all plans are generated
+            if motion_plans_completed == robot_num:
+                motion_plans_done.data = True
+            pub_done.publish(motion_plans_done)
             #If threads started, publish at a slower rate
             rospy.sleep(5)
+            continue
+        pub_done.publish(motion_plans_done)
         rate.sleep()
 
 if __name__ == "__main__":
