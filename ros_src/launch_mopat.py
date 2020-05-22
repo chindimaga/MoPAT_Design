@@ -34,9 +34,9 @@ if __name__ == "__main__":
                      '--title=Motion Planner Node',
                      '--', 'python', 'motion_planner_node.py'])
     print("LOG: Starting Motion Planner Node")
-    # time.sleep(0.5)
-    # subprocess.call(['gnome-terminal',
-    #                  '--geometry=50x10+1200+550',
-    #                  '--title=MoPAT Plot Node',
-    #                  '--', 'python', 'plot_node.py'])
-    # print("LOG: Starting MoPAT Plotter Node")
+    time.sleep(0.5)
+    subprocess.call(['gnome-terminal',
+                     '--geometry=50x10+1200+550',
+                     '--title=MoPAT Plot Node',
+                     '--', 'python', 'plot_node.py'])
+    print("LOG: Starting MoPAT Plotter Node")
