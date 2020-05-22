@@ -131,7 +131,7 @@ def motion_planner_node():
     pub_done = rospy.Publisher("/mopat/motion_plans_done", Bool, queue_size = 1)
     #Set rate
     rate = rospy.Rate(1)
-    #Generate
+    #Plan!
     while not rospy.is_shutdown():
         #Don't start until all static config is found and planners aren't started
         if got_static_config and not all_planners_started:

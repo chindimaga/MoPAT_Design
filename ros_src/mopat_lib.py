@@ -214,7 +214,7 @@ class Robot(Thread):
         (curr_x, curr_y) = self.get_pos()
         for (x,y) in zip(self.act_pathx[1:], self.act_pathy[1:]):
             #If LSB == 1 : Wait
-            while self.mrc_flag == 0b00000001:
+            while self.mrc_flag & 0b00000001  == 1:
                 self.holo_move_robot((0,0))
                 time.sleep(1)
             #Get angle
@@ -241,7 +241,7 @@ class Robot(Thread):
         #If path wasn't found:
         if self.act_pathx[0] == 99999:
             print("LOG: Robot", self.index, "No Path Found! Stopping!")
-            self.robot_reached = True
+            self.robot_reached = True   #Flip flag
             return 0
         #Otherwise, start controller
         self.basic_robot_controller()

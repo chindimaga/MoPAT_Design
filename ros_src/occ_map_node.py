@@ -55,7 +55,7 @@ def occ_map_node():
     pub = rospy.Publisher("mopat/occ_map", Image, queue_size=5)
     #Set rate
     rate = rospy.Rate(1)
-    #Run
+    #Binarize!
     while not rospy.is_shutdown():
         #Don't run until raw_image is found
         if got_raw_image:

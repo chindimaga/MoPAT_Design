@@ -62,7 +62,7 @@ def config_space_node():
     pub = rospy.Publisher("mopat/static_config", Image, queue_size=5)
     #Set rate
     rate = rospy.Rate(1)
-    #Run
+    #Dilate!
     while not rospy.is_shutdown():
         #Don't generate until occ map is found
         if got_occ_map:

@@ -147,7 +147,7 @@ def plot_node():
     rospy.Subscriber("/mopat/robot_num", UInt32, robot_num_cb)
     rospy.Subscriber("/mopat/occ_map", Image, occ_map_cb)
     rospy.Subscriber("/mopat/static_config", Image, config_space_cb)
-    #Plot stuff
+    #Plot!
     while not rospy.is_shutdown():
         #Wait for occ_map and static_config
         if not (got_occ_map and got_static_config):
