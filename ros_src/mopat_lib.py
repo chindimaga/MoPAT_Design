@@ -1,4 +1,12 @@
-#MoPAT Library functions and classes
+#MoPAT Design Lab - Guining Pertin
+#MoPAT library functions and classes - Prev sim
+
+'''
+This library contains often used functions and classes based on the prev
+"Non+ROS" simulator - more often pymunk functions
+'''
+
+#Import libraries
 import pygame
 from pygame.locals import *
 import pymunk
@@ -7,8 +15,8 @@ import numpy as np
 import time
 from threading import Thread
 
-screen_size = (500,500)
-#Colors
+#Global variables
+screen_size = (500,500)             #Default screen_size
 colors = ["red", "blue", "brown", "lawngreen",
           "gold" , "violet","blueviolet", "orange",
           "gainsboro", "springgreen", "deeppink", "cyan"]
@@ -123,28 +131,30 @@ class Robot(Thread):
     The robot class
     Parameters:
         body            : robot body object
-        index           : robot predefined index
+        index           : robot's predefined index
         init_pos        : starting location
         goal            : goal location
-        map             : the screen matrix
     '''
     def __init__(self, index, space, pos):
         '''
         Well, initialize
+        Arguments:
+            index       : robot's predefined index
+            space       : pymunk space to work with
+            pos         : user defined robot initial position
         '''
         super(Robot, self).__init__()
-        self.shape = add_robot(space, pos, colors[index])
-        self.body = self.shape.body
-        self.index = index
-        self.init_pos = pos
-        self.screen_size = screen_size
-        self.got_motion_plan = False
-        self.robot_reached = 0
-        self.mrc_flags = 0b00000001
+        self.shape = add_robot(space, pos, colors[index])   #Add robot first
+        self.body = self.shape.body                         #Robot body object
+        self.index = index                                  #Robot's index
+        self.init_pos = pos                                 #Robot's starting position
+        self.got_motion_plan = False                        #Flag - True if plan received
+        self.robot_reached = False                          #Flag - True if robot reaches dest. or plan fails
+        self.mrc_flags = 0b00000001                         #Byte Flag - MRC control
 
     def set_goal(self, goal):
         '''
-        Set the goal paramter
+        Set the goal parameter
         '''
         self.goal = goal
 
@@ -171,6 +181,7 @@ class Robot(Thread):
 
     def motion_plan_cb(self, data):
         '''
+        Get the motion plan for ith robot
         Arguments:
             data    :   ROS std_msgs/UInt32MultiArray
         '''
@@ -185,7 +196,7 @@ class Robot(Thread):
             self.act_pathx.insert(0, data.data[i*2])
             self.act_pathy.insert(0, screen_size[1] - data.data[i*2+1])
             # self.robot_plan.append((data.data[i*2], data.data[i*2+1]))
-        self.got_motion_plan = True
+        self.got_motion_plan = True     #Flip flag
 
     def holo_move_robot(self, vel):
         '''
@@ -199,42 +210,38 @@ class Robot(Thread):
         '''
         #Constant velocity, angle controlled
         print("LOG: Robot", self.index, "Starting motion")
-        #Get angle
+        #Get current position
         (curr_x, curr_y) = self.get_pos()
-        pathx2follow = self.act_pathx[1:]
-        pathy2follow = self.act_pathy[1:]
-        for (x,y) in zip(pathx2follow, pathy2follow):
-            #Wait until mrc signal
+        for (x,y) in zip(self.act_pathx[1:], self.act_pathy[1:]):
+            #If LSB == 1 : Wait
             while self.mrc_flag == 0b00000001:
+                self.holo_move_robot((0,0))
                 time.sleep(1)
-            #atan2 to get angle
+            #Get angle
             head_angle = np.arctan2(y-curr_y,x-curr_x)
-            #set velocity
+            #Set velocity
             self.holo_move_robot((80*np.cos(head_angle),
                              80*np.sin(head_angle)))
-            #Update global positions
-            # (curr_x, curr_y) =
-            #wait until robot reaches the selected point
+            #Wait until robot reaches the set point
             while not ((int(x-curr_x) == 0) and (int(y-curr_y) == 0)):
-                #update loc until reached
                 (curr_x, curr_y) = self.get_pos()
-                continue
-        #If goal reached, stop
+        #Stop
         self.holo_move_robot((0,0))
+        self.robot_reached = True       #Flip flag
         print("LOG: Robot", self.index, "Goal reached")
-        self.robot_reached = 1
 
     def run(self):
         '''
         Thread run
         '''
-        #Wait until motion plan is found
+        #Wait until motion plan is received
         while not self.got_motion_plan:
             time.sleep(1)
             continue
         #If path wasn't found:
         if self.act_pathx[0] == 99999:
             print("LOG: Robot", self.index, "No Path Found! Stopping!")
-            self.robot_reached = 1
+            self.robot_reached = True
             return 0
+        #Otherwise, start controller
         self.basic_robot_controller()

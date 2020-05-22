@@ -26,12 +26,12 @@ from std_msgs.msg import UInt32MultiArray, UInt32
 import matplotlib.pyplot as plt
 
 #Global variables
-occ_map = None
-static_config = None
-screen_size = None
+occ_map = None              #Predifined global occ_map
+static_config = None        #Predefined global static_config
+screen_size = None          #Predefined global screen_size
+robot_num = 0               #Number of robots in sumulation
 robot_starts = {}           #Dict - robot_index : robot_start
 robot_goals = {}            #Dict - robot_index : robot_goal
-robot_num = 0               #Number of robots in sumulation
 got_occ_map = False         #Flag - True if occ_map data received
 got_static_config = False   #Flag - True if static_config data received
 colors = ["red", "blue", "brown", "lawngreen",
@@ -51,7 +51,7 @@ def occ_map_cb(data):
     global screen_size
     if not got_occ_map:
         occ_map = bridge.imgmsg_to_cv2(data, desired_encoding = "passthrough")
-        screen_size = occ_map.shape
+        screen_size = occ_map.shape #Set screen size using occ_map
         got_occ_map = True          #Flip flag
         print("LOG: Got occupancy map")
 
@@ -101,13 +101,15 @@ class robot_plan():
     '''
     The robot plan class
     Parameters:
-        index           : robot predefined index
+        index           : robot's predefined index
     '''
     def __init__(self, index):
         '''
         Well, initialize
+        Arguments:
+            index       : robot's predefined index
         '''
-        self.index = index
+        self.index = index              #Robot's index
         self.got_motion_plan = False    #Set local flag
         #Subscribe to ith robot's motion plan
         rospy.Subscriber("/mopat/motion_plan_{0}".format(index),

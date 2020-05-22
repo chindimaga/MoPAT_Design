@@ -27,7 +27,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../")
 from algorithms import config_space
 
 #Global variables
-occ_map = None
+occ_map = None          #Predifined global occ_map
 got_occ_map = False     #Flag - True if occ_map data received
 rad = 20                #Change this with robot size
 

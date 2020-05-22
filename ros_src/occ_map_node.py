@@ -22,7 +22,7 @@ import cv2
 import numpy as np
 
 #Global variables
-raw_image = None
+raw_image = None            #Predifined global raw_image
 got_raw_image = False       #Flag - True of raw_image received
 
 bridge = CvBridge()         #Required for rosmsg-cv conversion
