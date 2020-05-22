@@ -1,5 +1,5 @@
 #MoPAT Design Lab - Guining Pertin
-#Plotter node - 19-05-2020
+#Plotter node - 19-05-20
 
 '''
 This node plots live data from all the nodes
@@ -37,6 +37,7 @@ got_static_config = False   #Flag - True if static_config data received
 colors = ["red", "blue", "brown", "lawngreen",
           "gold" , "violet","blueviolet", "orange",
           "gainsboro", "springgreen", "deeppink", "cyan"]
+
 bridge = CvBridge()         #Required for rosmsg-cv conversion
 
 def occ_map_cb(data):
@@ -131,13 +132,13 @@ def plot_node():
     '''
     Create plotter node
     '''
-    #Initialize node
-    rospy.init_node("plot_node")
-    print("LOG: Started MoPAT Plotter Node")
     #Local variables
     robot_motion_plans = {}                 #Dict - robot_index : robot_plan
     robot_motion_plans_subscribed = False   #Flag - True if all motion plans subscribed
     plotted_occ_config = False              #Flag - True if occupancy+static_config plotted
+    #Initialize node
+    rospy.init_node("plot_node")
+    print("LOG: Started MoPAT Plotter Node")
     #Subscribers
     rospy.Subscriber("/mopat/robot_starts", UInt32MultiArray, robot_starts_cb)
     rospy.Subscriber("/mopat/robot_goals", UInt32MultiArray, robot_goals_cb)
@@ -166,7 +167,7 @@ def plot_node():
             plt.matshow(plot_map,fignum = 0)
             plt.title("Occupancy Map + Configuration Space + Plans")
             plt.axis("off")
-            #Wait until robot data is published by simulator
+            #Don't run until simulator publishes robot data
             if robot_num != 0:
                 for i in range(robot_num):
                     #Start subscribers for each uninitialized robot

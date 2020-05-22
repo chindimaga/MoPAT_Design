@@ -30,6 +30,7 @@ from algorithms import config_space
 occ_map = None
 got_occ_map = False     #Flag - True if occ_map data received
 rad = 20                #Change this with robot size
+
 bridge = CvBridge()     #Required for rosmsg-cv conversion
 
 def occ_map_cb(data):
@@ -50,7 +51,9 @@ def config_space_node():
     '''
     Create configuration space node
     '''
+    #Global variables
     global occ_map
+    global got_occ_map
     #Initialize node
     rospy.init_node("config_space_node")
     print("LOG: Started Configuration Space Generator node")
@@ -63,11 +66,12 @@ def config_space_node():
     while not rospy.is_shutdown():
         #Don't generate until occ map is found
         if got_occ_map:
+            #Get configuration space
             static_config = config_space.gen_config(occ_map, rad)
             pub.publish(bridge.cv2_to_imgmsg(static_config.astype(np.uint8), encoding="passthrough"))
             #Sleep and get occ_map again
             got_occ_map = False     #Flip flag
-            rospy.sleep(10)
+            rospy.sleep(5)
         rate.sleep()
 
 if __name__ == "__main__":
