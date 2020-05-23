@@ -32,7 +32,7 @@ def add_robot(space, pos, col):
         body    : robot_body object
     '''
     #Create robot main body
-    body = pymunk.Body(1, pymunk.moment_for_circle(1, 0, 12))
+    body = pymunk.Body(1, pymunk.moment_for_circle(1, 0, 15))
     #Set body properties
     body.position = pos
     body.elasticity = 0
@@ -125,6 +125,7 @@ def draw_goal(screen, screen_size, goal, index):
                      (goal[0]-10, screen_size[1]-goal[1]+10),
                      (goal[0]+10, screen_size[1]-goal[1]-10),
                      5)
+
 
 class Robot(Thread):
     '''

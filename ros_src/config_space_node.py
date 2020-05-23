@@ -29,7 +29,7 @@ from algorithms import config_space
 #Global variables
 occ_map = None          #Predifined global occ_map
 got_occ_map = False     #Flag - True if occ_map data received
-rad = 20                #Change this with robot size
+rad = 16                #Change this with robot size
 
 bridge = CvBridge()     #Required for rosmsg-cv conversion
 

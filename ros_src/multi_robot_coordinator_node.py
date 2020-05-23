@@ -26,11 +26,27 @@ Commands:
 #ROS
 import rospy
 from std_msgs.msg import UInt32MultiArray, Bool, ByteMultiArray
+#Others
+import numpy as np
+import itertools
 
 #Global variables
 robot_positions = {}                    #Dict - robot_index : robot_position
 mrc_local_flags = {}                    #Dict - robot_index : mrc byte flag
 motion_plans_done = False               #Flag - True if all motion plans flag received
+
+def check_robot_collision(i, j):
+    '''
+    Function to check collision between two robots
+    '''
+    #Check distance between two robots
+    x = robot_positions[i][0] - robot_positions[j][0]
+    y = robot_positions[i][1] - robot_positions[j][1]
+    #If less than minimum, nearby
+    if np.linalg.norm([x,y]) < 40:
+        return 1
+    #If no one nearby
+    return 0
 
 def robot_positions_cb(data):
     '''
@@ -71,14 +87,26 @@ def multi_robot_coordinator_node():
         robot_num = len(robot_positions)
         #Don't start until simulation started
         if robot_num != 0:
-            #1. If all motion_plans not generated - wait signal
             mrc_output_flags.data.clear()       #Clear flags everytime
+            waiting_robot_list = []             #Clear waiting list
+            #1. Initialization - If all motion_plans not generated - wait signal
             if not motion_plans_done:
                 for i in range(robot_num):
                     mrc_output_flags.data.append(0b00000001) #Wait for each robot
             else:
                 for i in range(robot_num):
                     mrc_output_flags.data.append(0b00000000) #Run each robot
+                #2. Collision control - stop robot if near "higher" robot
+                #Check for each combination
+                for x in itertools.combinations(robot_positions, 2):
+                    #If near, one with lower index waits
+                    if check_robot_collision(x[0], x[1]):
+                        #One with lower index waits
+                        waiting_robot_list.append(min(x))
+                #Add wait signal to the robots
+                for i in range(robot_num):
+                    if i in waiting_robot_list:
+                        mrc_output_flags.data[i] = mrc_output_flags.data[i] or 0b00000001
             pub.publish(mrc_output_flags)
         rate.sleep()
 
