@@ -43,7 +43,7 @@ def check_robot_collision(i, j):
     x = robot_positions[i][0] - robot_positions[j][0]
     y = robot_positions[i][1] - robot_positions[j][1]
     #If less than minimum, nearby
-    if np.linalg.norm([x,y]) < 40:
+    if np.linalg.norm([x,y]) < 100:
         return 1
     #If no one nearby
     return 0

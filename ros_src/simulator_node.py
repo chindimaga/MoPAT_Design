@@ -80,7 +80,8 @@ def simulator_node():
     pub_positions = rospy.Publisher("mopat/robot_positions", UInt32MultiArray, queue_size=5)
     pub_num = rospy.Publisher("mopat/robot_num", UInt32, queue_size=5)
     #Create map
-    generate_test_map(space)
+    # generate_test_map(space)
+    generate_random_map(space)
     print("USER: Enter initial positions now")
     #Simulate!
     while not rospy.is_shutdown():

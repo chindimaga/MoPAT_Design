@@ -67,10 +67,26 @@ def add_static_obstacle(space, pos, size):
     #Add the object
     space.add(body, shape)
 
-def generate_random_map():
+def generate_random_map(space):
     '''
     Function to generate random maps for simulations
+    Arguments:
+        space   : pymunk space object
     '''
+    #Create borders
+    add_static_obstacle(space, (0,0), (5,500))
+    add_static_obstacle(space, (0,0), (500,5))
+    add_static_obstacle(space, (495,0), (5,500))
+    add_static_obstacle(space, (0,495), (500,5))
+    #Consider map as a 25x25 matrix using const size obstacles
+    obstacle_size = (20,20)
+    for y in range(25):
+        prob_no = (7+np.random.choice(3, p = [0.1,0.1,0.8]))/10
+        map_x = np.random.choice(2, size = 25, p = [prob_no, 1-prob_no])
+        for x in range(25):
+            if map_x[x]:
+                add_static_obstacle(space, (25*x,25*y), obstacle_size)
+
     return 0
 
 def generate_test_map(space):
