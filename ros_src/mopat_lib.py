@@ -79,9 +79,10 @@ def generate_random_map(space):
     add_static_obstacle(space, (495,0), (5,500))
     add_static_obstacle(space, (0,495), (500,5))
     #Consider map as a 25x25 matrix using const size obstacles
-    obstacle_size = (30,30)
+    obstacle_size = (20,20)
     for y in range(25):
-        map_x = np.random.choice(2, size = 25, p = [0.8, 0.2])
+        prob_no = (7+np.random.choice(3, p = [0.1,0.1,0.8]))/10
+        map_x = np.random.choice(2, size = 25, p = [prob_no, 1-prob_no])
         for x in range(25):
             if map_x[x]:
                 add_static_obstacle(space, (25*x,25*y), obstacle_size)
