@@ -221,6 +221,15 @@ class Robot(Thread):
         '''
         self.body.velocity = vel
 
+    def uni_move_robot(self, vel, angle):
+        '''
+        Function for unicycle model for the robot
+        '''
+        #Set angle
+        self.body.angle = angle
+        self.body.velocity = (vel*np.cos(angle),
+                         vel*np.sin(angle))
+
     def basic_robot_controller(self):
         '''
         Basic holonomic robot controller function
@@ -237,8 +246,9 @@ class Robot(Thread):
             #Get angle
             head_angle = np.arctan2(y-curr_y,x-curr_x)
             #Set velocity
-            self.holo_move_robot((80*np.cos(head_angle),
-                             80*np.sin(head_angle)))
+            # self.holo_move_robot((80*np.cos(head_angle),
+            #                  80*np.sin(head_angle)))
+            self.uni_move_robot(80, head_angle)
             #Wait until robot reaches the set point
             while not ((int(x-curr_x) == 0) and (int(y-curr_y) == 0)):
                 (curr_x, curr_y) = self.get_pos()
