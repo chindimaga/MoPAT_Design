@@ -41,7 +41,7 @@ def add_robot(space, pos, col):
     shape = pymunk.Circle(body, 15)
     shape.color = pygame.color.THECOLORS[col]
     #Show heading side
-    heading = pymunk.Circle(body, 4, offset = (10,0))
+    heading = pymunk.Circle(body, 5, offset = (10,0))
     heading.color = pygame.color.THECOLORS["black"]
     #Add the object
     space.add(body, shape, heading)
@@ -67,6 +67,18 @@ def add_static_obstacle(space, pos, size):
     #Add the object
     space.add(body, shape)
 
+def generate_empty_map(space):
+    '''
+    Function to generate empty map for test
+    Arguments:
+        space   : pymunk space object
+    '''
+    #Create borders
+    add_static_obstacle(space, (0,0), (5,500))
+    add_static_obstacle(space, (0,0), (500,5))
+    add_static_obstacle(space, (495,0), (5,500))
+    add_static_obstacle(space, (0,495), (500,5))
+
 def generate_random_map(space):
     '''
     Function to generate random maps for simulations
@@ -86,8 +98,6 @@ def generate_random_map(space):
         for x in range(25):
             if map_x[x]:
                 add_static_obstacle(space, (25*x,25*y), obstacle_size)
-
-    return 0
 
 def generate_test_map(space):
     '''
