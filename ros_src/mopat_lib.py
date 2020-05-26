@@ -41,7 +41,7 @@ def add_robot(space, pos, col):
     shape = pymunk.Circle(body, 15)
     shape.color = pygame.color.THECOLORS[col]
     #Show heading side
-    heading = pymunk.Circle(body, 2, offset = (0,5))
+    heading = pymunk.Circle(body, 2, offset = (5,0))
     heading.color = pygame.color.THECOLORS["black"]
     #Add the object
     space.add(body, shape, heading)
