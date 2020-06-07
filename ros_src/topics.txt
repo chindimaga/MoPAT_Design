@@ -1,0 +1,14 @@
+mopat/tracking/raw_image
+mopat/tracking/occ_map
+mopat/tracking/static_config
+
+mopat/robot/robot_starts
+mopat/robot/robot_goals
+mopat/robot/robot_positions
+mopat/robot/robot_num
+
+mopat/control/mrc_output_flags
+mopat/control/motion_plan_{}
+mopat/control/motion_plans_done
+
+mopat/user/user_control

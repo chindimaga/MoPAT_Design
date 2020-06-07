@@ -4,13 +4,13 @@
 '''
 This node generates the motion plan for robots given starts and goals
 Subscribed topics:
-    mopat/static_config          -   sensor_msgs/Image (Bool)
-    mopat/robot_starts           -   std_msgs/UInt32MultiArray
-    mopat/robot_goals            -   std_msgs/UInt32MultiArray
-    mopat/robot_num              -   std_msgs/UInt32
+    mopat/tracking/static_config          -   sensor_msgs/Image (Bool)
+    mopat/robot/robot_starts              -   std_msgs/UInt32MultiArray
+    mopat/robot/robot_goals               -   std_msgs/UInt32MultiArray
+    mopat/robot/robot_num                 -   std_msgs/UInt32
 Published topics:
-    mopat/motion_plan_{i}        -   std_msgs/UInt32MultiArrays
-    mopat/motion_plans_done      -   std_msgs/Bool
+    mopat/control/motion_plan_{i}         -   std_msgs/UInt32MultiArrays
+    mopat/control/motion_plans_done       -   std_msgs/Bool
 Work:
     Gets config_space, starts and goals and uses A* to get motion plans
 '''
@@ -124,11 +124,11 @@ def motion_planner_node():
     rospy.init_node("motion_planner_node")
     print("LOG: Started A* Motion Plan Generator node")
     #Subscribers and publishers
-    rospy.Subscriber("mopat/static_config", Image, config_space_cb)
-    rospy.Subscriber("/mopat/robot_starts", UInt32MultiArray, robot_starts_cb)
-    rospy.Subscriber("/mopat/robot_goals", UInt32MultiArray, robot_goals_cb)
-    rospy.Subscriber("/mopat/robot_num", UInt32, robot_num_cb)
-    pub_done = rospy.Publisher("/mopat/motion_plans_done", Bool, queue_size = 1)
+    rospy.Subscriber("mopat/tracking/static_config", Image, config_space_cb)
+    rospy.Subscriber("mopat/robot/robot_starts", UInt32MultiArray, robot_starts_cb)
+    rospy.Subscriber("mopat/robot/robot_goals", UInt32MultiArray, robot_goals_cb)
+    rospy.Subscriber("mopat/robot/robot_num", UInt32, robot_num_cb)
+    pub_done = rospy.Publisher("mopat/control/motion_plans_done", Bool, queue_size = 1)
     #Set rate
     rate = rospy.Rate(1)
     #Plan!
@@ -144,7 +144,7 @@ def motion_planner_node():
                     robot_planners[i].set_params(robot_starts[i], robot_goals[i], screen_size)
                     #Start planners and publishers
                     robot_planners[i].start()
-                    robot_publishers[i] = rospy.Publisher("mopat/motion_plan_{0}".format(i),
+                    robot_publishers[i] = rospy.Publisher("mopat/control/motion_plan_{0}".format(i),
                                                           UInt32MultiArray, queue_size=5)
                 all_planners_started = True     #Flip flag - after planners are started
         #Don't run until all planners are set
