@@ -4,10 +4,11 @@
 '''
 This node coordinates the control of all the robots
 Subscribed_topics:
-    mopat/robot_positions       -   std_msgs/UInt32MultiArray
-    mopat/motion_plans_done     -   std_msgs/Bool
+    mopat/robot/robot_positions         -   std_msgs/UInt32MultiArray
+    mopat/control/motion_plans_done     -   std_msgs/Bool
+    mopat/user/user_control             -   std_msgs/String
 Published_topics:
-    mopat/mrc_output_flags             -   std_msgs/ByteMultiArray
+    mopat/control/mrc_output_flags      -   std_msgs/ByteMultiArray
 Work:
     Coordinate start of all robots together
     Coordinate collision control of robots
@@ -25,7 +26,7 @@ Commands:
 #Import libraries
 #ROS
 import rospy
-from std_msgs.msg import UInt32MultiArray, Bool, ByteMultiArray
+from std_msgs.msg import UInt32MultiArray, Bool, ByteMultiArray, String
 #Others
 import numpy as np
 import itertools
@@ -34,6 +35,14 @@ import itertools
 robot_positions = {}                    #Dict - robot_index : robot_position
 mrc_local_flags = {}                    #Dict - robot_index : mrc byte flag
 motion_plans_done = False               #Flag - True if all motion plans flag received
+
+def user_control_cb(data):
+    '''
+    Get user_control data
+    Arguments:
+        data    :   ROS std_msgs/String
+    '''
+    user_control = data.data
 
 def check_robot_collision(i, j):
     '''
@@ -77,9 +86,9 @@ def multi_robot_coordinator_node():
     rospy.init_node("multi_robot_coordinator_node")
     print("LOG: Started Multi-Robot Coordinator Node")
     #Subscribers and publisher
-    rospy.Subscriber("/mopat/robot_positions", UInt32MultiArray, robot_positions_cb)
-    rospy.Subscriber("/mopat/motion_plans_done", Bool, motion_plans_done_cb)
-    pub = rospy.Publisher("/mopat/mrc_output_flags", ByteMultiArray, queue_size = 5)
+    rospy.Subscriber("mopat/robot/robot_positions", UInt32MultiArray, robot_positions_cb)
+    rospy.Subscriber("mopat/control/motion_plans_done", Bool, motion_plans_done_cb)
+    pub = rospy.Publisher("mopat/control/mrc_output_flags", ByteMultiArray, queue_size = 5)
     #Set rate
     rate = rospy.Rate(1)
     #Coordinate!

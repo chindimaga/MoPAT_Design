@@ -4,14 +4,15 @@
 '''
 This node runs the entire simulation(only)
 Subscribed topics:
-    mopat/control/motion_plan_{i}       -   std_msgs/UInt32MultiArrays
-    mopat/control/mrc_output_flags      -   std_msgs/ByteMultiArray
+    mopat/control/motion_plan_{i}        -   std_msgs/UInt32MultiArrays
+    mopat/control/mrc_output_flags       -   std_msgs/ByteMultiArray
 Published topics:
-    mopat/tracking/raw_image            -   sensor_msgs/Image (BGR)
-    mopat/robot/robot_starts            -   std_msgs/UInt32MultiArray
-    mopat/robot/robot_goals             -   std_msgs/UInt32MultiArray
-    mopat/robot/robot_positions         -   std_msgs/UInt32MultiArray
-    mopat/robot/robot_num               -   std_msgs/UInt32
+    mopat/tracking/raw_image         -   sensor_msgs/Image (BGR)
+    mopat/robot/robot_starts      -   std_msgs/UInt32MultiArray
+    mopat/robot/robot_goals       -   std_msgs/UInt32MultiArray
+    mopat/robot/robot_positions   -   std_msgs/UInt32MultiArray
+    mopat/robot/robot_num         -   std_msgs/UInt32
+    mopat/user/user_control      -   std_msgs/String
 Work:
     Uses pymunk to run simulation and runs robot threads
 '''
@@ -21,8 +22,7 @@ Work:
 import rospy
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
-from std_msgs.msg import String
-from std_msgs.msg import UInt32MultiArray, UInt32, ByteMultiArray
+from std_msgs.msg import String, UInt32MultiArray, UInt32, ByteMultiArray
 #Others
 import sys
 import numpy as np
@@ -52,9 +52,11 @@ def simulator_node():
     goals_multiarray = UInt32MultiArray()       #Robot goals - UInt32MultiArray type rosmsg
     positions_multiarray = UInt32MultiArray()   #Robot positions - UInt32MultiArray type rosmsg
     starts_multiarray = UInt32MultiArray()      #Robot starts - UInt32MultiArray type rosmsg
+    user_control = String()                     #User data - String type rosmsg
     robot_starts = {}                           #Dict - robot_index : robot start
     robot_goals = {}                            #Dict - robot_index : robot goal
     steps = 50                                  #Simulation steps
+    user_control.data = "formation"             #Set to formation control simulation
     robot_index = 0                             #Number of robots and indexing variable
     got_starts = False                          #Flag - True if user inputs all starts
     got_goals = False                           #Flag - True if user inputs all goals
@@ -62,8 +64,8 @@ def simulator_node():
     got_mouse_click = False                     #Flag - True if mouse clicked
     bridge = CvBridge()                         #Required for rosmsg-cv conversion
     #Initialize node
-    rospy.init_node("simulator_node")
-    print("LOG: Started MoPAT Multi-Robot Simulator MkII node")
+    rospy.init_node("formation_sim_node")
+    print("LOG: Started MoPAT Multi-Robot Formation Simulator MkII node")
     #Game initialization
     os.environ['SDL_VIDEO_WINDOW_POS'] = "+0,+50"   #Set position
     pygame.init()
@@ -73,16 +75,17 @@ def simulator_node():
     clock = pygame.time.Clock()
     space = pymunk.Space()                          #Game space
     #Subscriber and publishers
-    rospy.Subscriber("/mopat/control/mrc_output_flags", ByteMultiArray, mrc_cb)
+    rospy.Subscriber("mopat/control/mrc_output_flags", ByteMultiArray, mrc_cb)
     pub_raw = rospy.Publisher("mopat/tracking/raw_image", Image, queue_size=5)
     pub_starts = rospy.Publisher("mopat/robot/robot_starts", UInt32MultiArray, queue_size=5)
     pub_goals = rospy.Publisher("mopat/robot/robot_goals", UInt32MultiArray, queue_size=5)
     pub_positions = rospy.Publisher("mopat/robot/robot_positions", UInt32MultiArray, queue_size=5)
-    pub_num = rospy.Publisher("mopat/robot/robot_num", UInt32, queue_size=5)
+    pub_num = rospy.Publisher("mopat/control/robot_num", UInt32, queue_size=5)
+    pub_user = rospy.Publisher("mopat/user/user_control", String, queue_size = 1)
     #Create map
-    # generate_empty_map(space)
+    generate_empty_map(space)
     # generate_test_map(space)
-    generate_random_map(space)
+    # generate_random_map(space)
     print("USER: Enter initial positions now")
     #Simulate!
     while not rospy.is_shutdown():
@@ -100,7 +103,7 @@ def simulator_node():
                 mouse_y = screen_size[1] - mouse_y  #Pygame pymunk conversion
                 got_mouse_click = True              #Flip flag
             if (event.type == KEYDOWN) and (event.key == K_w) and not got_goals:
-                print("USER: Enter goals now")
+                print("USER: Enter center and goals now")
                 robot_index = 0                     #Reset index for goals
                 goals_multiarray.data.clear()       #Clear data for goals
                 got_starts = True                   #Flip flag
@@ -133,7 +136,7 @@ def simulator_node():
                         print("LOG: Got Robot", robot_index,
                               "Goal:", mouse_x,";",mouse_y)
                         robot_index += 1            #Increment goal index
-                        if robot_index >= len(robot_list):
+                        if robot_index >= 2:
                             got_goals = True        #Flip flag to start simulation
                             continue
                     else:
@@ -179,6 +182,7 @@ def simulator_node():
         pub_goals.publish(goals_multiarray)
         pub_positions.publish(positions_multiarray)
         pub_num.publish(len(robot_list))
+        pub_user.publish(user_control)
         #Clear positions for next step
         positions_multiarray.data.clear()
         clock.tick(steps)

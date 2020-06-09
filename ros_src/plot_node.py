@@ -4,12 +4,12 @@
 '''
 This node plots live data from all the nodes
 Subscribed topics:
-    mopat/motion_plan_{i}        -  std_msgs/UInt32MultiArrays
-    mopat/robot_starts           -  std_msgs/UInt32MultiArray
-    mopat/robot_goals            -  std_msgs/UInt32MultiArray
-    mopat/robot_num              -  std_msgs/UInt32
-    mopat/static_config          -  sensor_msgs/Image (Bool)
-    mopat/occ_map                -  sensor_msgs/Image (Bool)
+    mopat/control/motion_plan_{i}        -  std_msgs/UInt32MultiArrays
+    mopat/robot/robot_starts           -  std_msgs/UInt32MultiArray
+    mopat/robot/robot_goals            -  std_msgs/UInt32MultiArray
+    mopat/robot/robot_num              -  std_msgs/UInt32
+    mopat/tracking/static_config          -  sensor_msgs/Image (Bool)
+    mopat/tracking/occ_map                -  sensor_msgs/Image (Bool)
 Published topics:
     None
 Work:
@@ -112,7 +112,7 @@ class robot_plan():
         self.index = index              #Robot's index
         self.got_motion_plan = False    #Set local flag
         #Subscribe to ith robot's motion plan
-        rospy.Subscriber("/mopat/motion_plan_{0}".format(index),
+        rospy.Subscriber("mopat/control/motion_plan_{0}".format(index),
                          UInt32MultiArray, self.motion_plan_cb)
 
     def motion_plan_cb(self, data):
@@ -142,11 +142,11 @@ def plot_node():
     rospy.init_node("plot_node")
     print("LOG: Started MoPAT Plotter Node")
     #Subscribers
-    rospy.Subscriber("/mopat/robot_starts", UInt32MultiArray, robot_starts_cb)
-    rospy.Subscriber("/mopat/robot_goals", UInt32MultiArray, robot_goals_cb)
-    rospy.Subscriber("/mopat/robot_num", UInt32, robot_num_cb)
-    rospy.Subscriber("/mopat/occ_map", Image, occ_map_cb)
-    rospy.Subscriber("/mopat/static_config", Image, config_space_cb)
+    rospy.Subscriber("mopat/robot/robot_starts", UInt32MultiArray, robot_starts_cb)
+    rospy.Subscriber("mopat/robot/robot_goals", UInt32MultiArray, robot_goals_cb)
+    rospy.Subscriber("mopat/robot/robot_num", UInt32, robot_num_cb)
+    rospy.Subscriber("mopat/tracking/occ_map", Image, occ_map_cb)
+    rospy.Subscriber("mopat/tracking/static_config", Image, config_space_cb)
     #Plot!
     while not rospy.is_shutdown():
         #Wait for occ_map and static_config

@@ -14,6 +14,13 @@ if __name__ == "__main__":
     print("LOG: Starting Simulator Node")
     time.sleep(0.5)
 
+    # subprocess.call(['gnome-terminal',
+    #                  '--geometry=50x2+00+600',
+    #                  '--title=Simulator Node',
+    #                  '--', 'python', 'formation_sim_node.py'])
+    # print("LOG: Starting Formation Simulator Node")
+    # time.sleep(0.5)
+
     subprocess.call(['gnome-terminal',
                      '--geometry=50x2+1200+50',
                      '--title=Occupancy Map Node',

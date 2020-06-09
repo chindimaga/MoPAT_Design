@@ -4,9 +4,9 @@
 '''
 This node generates the configuration space for the given occ_map
 Subscribed topics:
-    mopat/occ_map               -   sensor_msgs/Image (Bool)
+    mopat/tracking/occ_map               -   sensor_msgs/Image (Bool)
 Published topics:
-    mopat/static_config         -   sensor_msgs/Image (Bool)
+    mopat/tracking/static_config         -   sensor_msgs/Image (Bool)
 Work:
     Gets the occupancy map and dilates it to get configuration space
 '''
@@ -58,8 +58,8 @@ def config_space_node():
     rospy.init_node("config_space_node")
     print("LOG: Started Configuration Space Generator node")
     #Subscribers and publishers
-    rospy.Subscriber("/mopat/occ_map", Image, occ_map_cb)
-    pub = rospy.Publisher("mopat/static_config", Image, queue_size=5)
+    rospy.Subscriber("mopat/tracking/occ_map", Image, occ_map_cb)
+    pub = rospy.Publisher("mopat/tracking/static_config", Image, queue_size=5)
     #Set rate
     rate = rospy.Rate(1)
     #Dilate!
