@@ -62,7 +62,7 @@ def config_space_cb(data):
         static_config = static_config.astype(bool)
         screen_size = static_config.shape       #Set screen size using config_space
         got_static_config = True                #Flip flag
-        print("LOG: Got static configuration space")
+        rospy.loginfo("LOG: Got static configuration space")
 
 def robot_starts_cb(data):
     '''
@@ -123,7 +123,7 @@ def motion_planner_node():
     robot_publishers = {}       #Dict - robot_index : robot publisher object
     #Initialize node
     rospy.init_node("motion_planner_node")
-    print("LOG: Started A* Motion Plan Generator node")
+    rospy.loginfo("LOG: Started A* Motion Plan Generator node")
     #Subscribers and publishers
     rospy.Subscriber("mopat/tracking/static_config", Image, config_space_cb)
     rospy.Subscriber("mopat/robot/robot_starts", UInt32MultiArray, robot_starts_cb)

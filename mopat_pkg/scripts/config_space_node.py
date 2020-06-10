@@ -46,7 +46,7 @@ def occ_map_cb(data):
         occ_map = bridge.imgmsg_to_cv2(data, desired_encoding = "passthrough")
         occ_map = occ_map.astype(bool)
         got_occ_map = True          #Flip flag
-        print("LOG: Got occupancy map")
+        rospy.loginfo("LOG: Got occupancy map")
 
 def config_space_node():
     '''
@@ -57,7 +57,7 @@ def config_space_node():
     global got_occ_map
     #Initialize node
     rospy.init_node("config_space_node")
-    print("LOG: Started Configuration Space Generator node")
+    rospy.loginfo("LOG: Started Configuration Space Generator node")
     #Subscribers and publishers
     rospy.Subscriber("mopat/tracking/occ_map", Image, occ_map_cb)
     pub = rospy.Publisher("mopat/tracking/static_config", Image, queue_size=5)

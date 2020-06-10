@@ -54,7 +54,7 @@ def occ_map_cb(data):
         occ_map = bridge.imgmsg_to_cv2(data, desired_encoding = "passthrough")
         screen_size = occ_map.shape #Set screen size using occ_map
         got_occ_map = True          #Flip flag
-        print("LOG: Got occupancy map")
+        rospy.loginfo("LOG: Got occupancy map")
 
 def config_space_cb(data):
     '''
@@ -67,7 +67,7 @@ def config_space_cb(data):
     if not got_static_config:
         static_config = bridge.imgmsg_to_cv2(data, desired_encoding = "passthrough")
         got_static_config = True    #Flip flag
-        print("LOG: Got static configuration space")
+        rospy.loginfo("LOG: Got static configuration space")
 
 def robot_starts_cb(data):
     '''
@@ -129,7 +129,7 @@ class robot_plan():
             self.gen_pathx.append(data.data[i*2])
             self.gen_pathy.append(data.data[i*2+1])
         self.got_motion_plan = True     #Flip flag
-        print("LOG: Got Robot",self.index, "Motion Plan")
+        rospy.loginfo("LOG: Got Robot"+str(self.index)+"Motion Plan")
 
 def plot_node():
     '''
@@ -141,7 +141,7 @@ def plot_node():
     plotted_occ_config = False              #Flag - True if occupancy+static_config plotted
     #Initialize node
     rospy.init_node("plot_node")
-    print("LOG: Started MoPAT Plotter Node")
+    rospy.loginfo("LOG: Started MoPAT Plotter Node")
     #Subscribers
     rospy.Subscriber("mopat/robot/robot_starts", UInt32MultiArray, robot_starts_cb)
     rospy.Subscriber("mopat/robot/robot_goals", UInt32MultiArray, robot_goals_cb)

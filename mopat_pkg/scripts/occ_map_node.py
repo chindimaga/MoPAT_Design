@@ -39,7 +39,7 @@ def raw_image_cb(data):
     if not got_raw_image:
         raw_image = bridge.imgmsg_to_cv2(data, desired_encoding = "passthrough")
         got_raw_image = True                #Flip flag
-        print("LOG: Got raw image")
+        rospy.loginfo("LOG: Got raw image")
 
 def occ_map_node():
     '''
@@ -50,7 +50,7 @@ def occ_map_node():
     global got_raw_image
     #Initialize node
     rospy.init_node("occ_map_node")
-    print("LOG: Started Occupancy Map Generator node")
+    rospy.loginfo("LOG: Started Occupancy Map Generator node")
     #Subscribers and publishers
     rospy.Subscriber("mopat/tracking/raw_image", Image, raw_image_cb)
     pub = rospy.Publisher("mopat/tracking/occ_map", Image, queue_size=5)

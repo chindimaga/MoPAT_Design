@@ -85,7 +85,7 @@ def multi_robot_coordinator_node():
     mrc_output_flags = ByteMultiArray()     #Byte Flag - ByteMultiArray type rosmsg
     #Initialize node
     rospy.init_node("multi_robot_coordinator_node")
-    print("LOG: Started Multi-Robot Coordinator Node")
+    rospy.loginfo("LOG: Started Multi-Robot Coordinator Node")
     #Subscribers and publisher
     rospy.Subscriber("mopat/robot/robot_positions", UInt32MultiArray, robot_positions_cb)
     rospy.Subscriber("mopat/control/motion_plans_done", Bool, motion_plans_done_cb)

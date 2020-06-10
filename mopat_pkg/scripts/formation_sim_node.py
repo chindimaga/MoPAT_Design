@@ -66,7 +66,7 @@ def simulator_node():
     bridge = CvBridge()                         #Required for rosmsg-cv conversion
     #Initialize node
     rospy.init_node("formation_sim_node")
-    print("LOG: Started MoPAT Multi-Robot Formation Simulator MkII node")
+    rospy.loginfo("LOG: Started MoPAT Multi-Robot Formation Simulator MkII node")
     #Game initialization
     os.environ['SDL_VIDEO_WINDOW_POS'] = "+0,+50"   #Set position
     pygame.init()
@@ -87,16 +87,16 @@ def simulator_node():
     generate_empty_map(space)
     # generate_test_map(space)
     # generate_random_map(space)
-    print("USER: Enter initial positions now")
+    rospy.loginfo("USER: Enter initial positions now")
     #Simulate!
     while not rospy.is_shutdown():
         for event in pygame.event.get():
             #Exiting
             if event.type == QUIT:
-                print("EXIT: Exiting simulation")
+                rospy.loginfo("EXIT: Exiting simulation")
                 sys.exit(0)
             elif event.type == KEYDOWN and (event.key in [K_ESCAPE, K_q]):
-                print("EXIT: Exiting simulation")
+                rospy.loginfo("EXIT: Exiting simulation")
                 sys.exit(0)
             #Get user input
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -104,7 +104,7 @@ def simulator_node():
                 mouse_y = screen_size[1] - mouse_y  #Pygame pymunk conversion
                 got_mouse_click = True              #Flip flag
             if (event.type == KEYDOWN) and (event.key == K_w) and not got_goals:
-                print("USER: Enter center and goals now")
+                rospy.loginfo("USER: Enter center and goals now")
                 robot_index = 0                     #Reset index for goals
                 goals_multiarray.data.clear()       #Clear data for goals
                 got_starts = True                   #Flip flag
@@ -114,7 +114,7 @@ def simulator_node():
             if got_mouse_click:
                 #If user inputs starting locations
                 if not got_starts:
-                    print("LOG: Got Robot", robot_index,
+                    rospy.loginfo("LOG: Got Robot", robot_index,
                           "Start:", mouse_x,";",mouse_y)
                     #Create robot object with start
                     robot_list[robot_index] = Robot(robot_index, space, (mouse_x, mouse_y))
@@ -134,21 +134,21 @@ def simulator_node():
                         robot_list[robot_index].set_goal((mouse_x, mouse_y))
                         goals_multiarray.data.append(mouse_x)
                         goals_multiarray.data.append(mouse_y)
-                        print("LOG: Got Robot", robot_index,
+                        rospy.loginfo("LOG: Got Robot", robot_index,
                               "Goal:", mouse_x,";",mouse_y)
                         robot_index += 1            #Increment goal index
                         if robot_index >= 2:
                             got_goals = True        #Flip flag to start simulation
                             continue
                     else:
-                        print("USER: The point lies within an obstacle")
+                        rospy.loginfo("USER: The point lies within an obstacle")
 
                 got_mouse_click = False
         #Start simulation if all goals found
         else:
             #Start individual robot threads once
             if not started:
-                print("LOG: Starting Simulation...")
+                rospy.loginfo("LOG: Starting Simulation...")
                 for i in robot_list:
                     robot_list[i].start()
                 started = True
@@ -169,8 +169,8 @@ def simulator_node():
                 positions_multiarray.data.append(int(pos[1]))
             #Stop if all robots reached
             if sum(robot_reached_list) == robot_index and robot_index != 0:
-                print("LOG: All Robots Reached, Simulation Completed!")
-                print("EXIT: Exiting simulation in 5s")
+                rospy.loginfo("LOG: All Robots Reached, Simulation Completed!")
+                rospy.loginfo("EXIT: Exiting simulation in 5s")
                 rospy.sleep(5)
                 sys.exit(0)
         #Step up
@@ -187,7 +187,7 @@ def simulator_node():
         #Clear positions for next step
         positions_multiarray.data.clear()
         clock.tick(steps)
-        # print(clock.get_fps())
+        # rospy.loginfo(clock.get_fps())
 
 if __name__ == "__main__":
     try:
