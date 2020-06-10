@@ -129,7 +129,7 @@ class robot_plan():
             self.gen_pathx.append(data.data[i*2])
             self.gen_pathy.append(data.data[i*2+1])
         self.got_motion_plan = True     #Flip flag
-        rospy.loginfo("LOG: Got Robot"+str(self.index)+"Motion Plan")
+        rospy.loginfo("LOG: Got Robot "+str(self.index)+" Motion Plan")
 
 def plot_node():
     '''
@@ -141,7 +141,7 @@ def plot_node():
     plotted_occ_config = False              #Flag - True if occupancy+static_config plotted
     #Initialize node
     rospy.init_node("plot_node")
-    rospy.loginfo("LOG: Started MoPAT Plotter Node")
+    rospy.loginfo("INIT: Started MoPAT Plotter Node")
     #Subscribers
     rospy.Subscriber("mopat/robot/robot_starts", UInt32MultiArray, robot_starts_cb)
     rospy.Subscriber("mopat/robot/robot_goals", UInt32MultiArray, robot_goals_cb)

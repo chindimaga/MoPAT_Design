@@ -1,5 +1,6 @@
 #Rahul D
 
+import rospy
 import matplotlib.pyplot as plt
 import math
 import numpy as np
@@ -44,7 +45,7 @@ class Astar(Thread):
 
         explore, Visited = dict(), dict()
         explore[self.calc_index(start_node)] = start_node
-        print("LOG: A*: Robot", self.robot_index,"Finding Best Route")
+        rospy.loginfo("A*: Robot "+str(self.robot_index)+" Finding Best Route")
         while 1:
             if not bool(explore):
                 self.path=False
@@ -52,7 +53,7 @@ class Astar(Thread):
             c_id = min(explore, key=lambda o: explore[o].cost)
             current = explore[c_id]
             if current.x == goal_node.x and current.y == goal_node.y:
-                # print("LOG: A*: Robot_", self.robot_index," Found goal")
+                # rospy.loginfo("LOG: A*: Robot_", self.robot_index," Found goal")
                 goal_node.previous_node = current.previous_node
                 goal_node.cost = current.cost
                 break
@@ -83,9 +84,9 @@ class Astar(Thread):
 
         self.px, self.py = self.calc_final_path(goal_node, Visited)
         if self.path :
-            print("LOG: A*: Robot", self.robot_index,"Path exist")
+            rospy.loginfo("A*: Robot "+str(self.robot_index)+" Path exist")
         else:
-            print("LOG: A*: Robot", self.robot_index,"Path does not exist")
+            rospy.loginfo("A*: Robot "+str(self.robot_index)+" Path does not exist")
             self.px = [0]
             self.py = [0]
         self.plan_done = True

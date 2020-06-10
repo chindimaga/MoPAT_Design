@@ -57,7 +57,7 @@ def config_space_node():
     global got_occ_map
     #Initialize node
     rospy.init_node("config_space_node")
-    rospy.loginfo("LOG: Started Configuration Space Generator node")
+    rospy.loginfo("INIT: Started Configuration Space Generator node")
     #Subscribers and publishers
     rospy.Subscriber("mopat/tracking/occ_map", Image, occ_map_cb)
     pub = rospy.Publisher("mopat/tracking/static_config", Image, queue_size=5)

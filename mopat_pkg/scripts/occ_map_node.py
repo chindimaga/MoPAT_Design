@@ -50,7 +50,7 @@ def occ_map_node():
     global got_raw_image
     #Initialize node
     rospy.init_node("occ_map_node")
-    rospy.loginfo("LOG: Started Occupancy Map Generator node")
+    rospy.loginfo("INIT: Started Occupancy Map Generator node")
     #Subscribers and publishers
     rospy.Subscriber("mopat/tracking/raw_image", Image, raw_image_cb)
     pub = rospy.Publisher("mopat/tracking/occ_map", Image, queue_size=5)
@@ -67,7 +67,7 @@ def occ_map_node():
             pub.publish(bridge.cv2_to_imgmsg(occ_map.astype(np.uint8), encoding = "passthrough"))
             #Sleep and get raw_image again
             got_raw_image = False           #Flip flag
-            rospy.sleep(5)
+            rospy.sleep(10)
         rate.sleep()
 
 if __name__ == "__main__":

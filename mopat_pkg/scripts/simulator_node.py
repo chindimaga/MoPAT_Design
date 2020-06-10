@@ -64,7 +64,7 @@ def simulator_node():
     bridge = CvBridge()                         #Required for rosmsg-cv conversion
     #Initialize node
     rospy.init_node("simulator_node")
-    rospy.loginfo("LOG: Started MoPAT Multi-Robot Simulator MkII node")
+    rospy.loginfo("INIT: Started MoPAT Multi-Robot Simulator MkII node")
     #Game initialization
     os.environ['SDL_VIDEO_WINDOW_POS'] = "+0,+50"   #Set position
     pygame.init()
@@ -111,8 +111,8 @@ def simulator_node():
             if got_mouse_click:
                 #If user inputs starting locations
                 if not got_starts:
-                    rospy.loginfo("LOG: Got Robot"+str(robot_index)+
-                          "Start:"+str(mouse_x)+";"+str(mouse_y))
+                    rospy.loginfo("LOG: Got Robot "+str(robot_index)+
+                          " Start: "+str(mouse_x)+"; "+str(mouse_y))
                     #Create robot object with start
                     robot_list[robot_index] = Robot(robot_index, space, (mouse_x, mouse_y))
                     starts_multiarray.data.append(mouse_x)
@@ -131,8 +131,8 @@ def simulator_node():
                         robot_list[robot_index].set_goal((mouse_x, mouse_y))
                         goals_multiarray.data.append(mouse_x)
                         goals_multiarray.data.append(mouse_y)
-                        rospy.loginfo("LOG: Got Robot"+str(robot_index)+
-                              "Goal:"+str(mouse_x)+";"+str(mouse_y))
+                        rospy.loginfo("LOG: Got Robot "+str(robot_index)+
+                              " Goal: "+str(mouse_x)+"; "+str(mouse_y))
                         robot_index += 1            #Increment goal index
                         if robot_index >= len(robot_list):
                             got_goals = True        #Flip flag to start simulation
@@ -189,4 +189,5 @@ if __name__ == "__main__":
     try:
         simulator_node()
     except rospy.ROSInterruptException:
+        sys.exit(0)
         pass

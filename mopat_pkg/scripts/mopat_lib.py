@@ -214,7 +214,7 @@ class Robot(Thread):
         Arguments:
             data    :   ROS std_msgs/UInt32MultiArray
         '''
-        rospy.loginfo("LOG: Got Robot"+str(self.index)+"Motion Plan")
+        rospy.loginfo("LOG: Got Robot "+str(self.index)+" Motion Plan")
         #Each time empty the paths
         self.act_pathx = []
         self.act_pathy = []
@@ -247,7 +247,7 @@ class Robot(Thread):
         Basic holonomic robot controller function
         '''
         #Constant velocity, angle controlled
-        rospy.loginfo("LOG: Robot"+str(self.index)+ "Starting motion")
+        rospy.loginfo("LOG: Robot "+str(self.index)+" Starting motion")
         #Get current position
         (curr_x, curr_y) = self.get_pos()
         for (x,y) in zip(self.act_pathx[1:], self.act_pathy[1:]):
@@ -265,7 +265,7 @@ class Robot(Thread):
         #Stop
         self.holo_move_robot((0,0))
         self.robot_reached = True       #Flip flag
-        rospy.loginfo("LOG: Robot"+str(self.index)+"Goal reached")
+        rospy.loginfo("LOG: Robot "+str(self.index)+" Goal reached")
 
     def run(self):
         '''
@@ -277,7 +277,7 @@ class Robot(Thread):
             continue
         #If path wasn't found:
         if self.act_pathx[0] == 99999:
-            rospy.loginfo("LOG: Robot"+str(self.index)+"No Path Found! Stopping!")
+            rospy.loginfo("LOG: Robot "+str(self.index)+" No Path Found! Stopping!")
             self.robot_reached = True   #Flip flag
             return 0
         #Otherwise, start controller

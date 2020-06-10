@@ -123,7 +123,7 @@ def motion_planner_node():
     robot_publishers = {}       #Dict - robot_index : robot publisher object
     #Initialize node
     rospy.init_node("motion_planner_node")
-    rospy.loginfo("LOG: Started A* Motion Plan Generator node")
+    rospy.loginfo("INIT: Started A* Motion Plan Generator node")
     #Subscribers and publishers
     rospy.Subscriber("mopat/tracking/static_config", Image, config_space_cb)
     rospy.Subscriber("mopat/robot/robot_starts", UInt32MultiArray, robot_starts_cb)
