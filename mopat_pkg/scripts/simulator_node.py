@@ -3,7 +3,7 @@
 #Simulator node - 12-05-20
 
 '''
-This node runs the entire simulation(only)
+This node runs pymunk simulation
 Subscribed topics:
     mopat/control/motion_plan_{i}       -   std_msgs/UInt32MultiArrays
     mopat/control/mrc_output_flags      -   std_msgs/ByteMultiArray
@@ -12,7 +12,6 @@ Published topics:
     mopat/robot/robot_starts            -   std_msgs/UInt32MultiArray
     mopat/robot/robot_goals             -   std_msgs/UInt32MultiArray
     mopat/robot/robot_positions         -   std_msgs/UInt32MultiArray
-    mopat/robot/robot_num               -   std_msgs/UInt32
 Work:
     Uses pymunk to run simulation and runs robot threads
 '''
@@ -75,15 +74,14 @@ def simulator_node():
     space = pymunk.Space()                          #Game space
     #Subscriber and publishers
     rospy.Subscriber("/mopat/control/mrc_output_flags", ByteMultiArray, mrc_cb)
-    pub_raw = rospy.Publisher("mopat/tracking/raw_image", Image, queue_size=5)
-    pub_starts = rospy.Publisher("mopat/robot/robot_starts", UInt32MultiArray, queue_size=5)
-    pub_goals = rospy.Publisher("mopat/robot/robot_goals", UInt32MultiArray, queue_size=5)
-    pub_positions = rospy.Publisher("mopat/robot/robot_positions", UInt32MultiArray, queue_size=5)
-    pub_num = rospy.Publisher("mopat/robot/robot_num", UInt32, queue_size=5)
+    pub_raw = rospy.Publisher("mopat/tracking/raw_image", Image, queue_size=1)
+    pub_starts = rospy.Publisher("mopat/robot/robot_starts", UInt32MultiArray, queue_size=1)
+    pub_goals = rospy.Publisher("mopat/robot/robot_goals", UInt32MultiArray, queue_size=1)
+    pub_positions = rospy.Publisher("mopat/robot/robot_positions", UInt32MultiArray, queue_size=1)
     #Create map
     # generate_empty_map(space)
-    # generate_test_map(space)
-    generate_random_map(space)
+    generate_test_map(space)
+    # generate_random_map(space)
     rospy.loginfo("USER: Enter initial positions now")
     #Simulate!
     while not rospy.is_shutdown():
@@ -179,7 +177,8 @@ def simulator_node():
         pub_starts.publish(starts_multiarray)
         pub_goals.publish(goals_multiarray)
         pub_positions.publish(positions_multiarray)
-        pub_num.publish(len(robot_list))
+        # pub_num.publish(len(robot_list))
+        rospy.set_param("/user/robot_num", len(robot_list))
         #Clear positions for next step
         positions_multiarray.data.clear()
         clock.tick(steps)

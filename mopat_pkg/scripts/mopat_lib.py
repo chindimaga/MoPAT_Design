@@ -18,7 +18,8 @@ import time
 from threading import Thread
 
 #Global variables
-screen_size = (500,500)             #Default screen_size
+x_size = rospy.get_param("/sim/screen_size")
+screen_size = (x_size, x_size)
 colors = ["red", "blue", "brown", "lawngreen",
           "gold" , "violet","blueviolet", "orange",
           "gainsboro", "springgreen", "deeppink", "cyan"]

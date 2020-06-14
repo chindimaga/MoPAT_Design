@@ -8,7 +8,6 @@ Subscribed topics:
     mopat/control/motion_plan_{i}        -  std_msgs/UInt32MultiArrays
     mopat/robot/robot_starts           -  std_msgs/UInt32MultiArray
     mopat/robot/robot_goals            -  std_msgs/UInt32MultiArray
-    mopat/robot/robot_num              -  std_msgs/UInt32
     mopat/tracking/static_config          -  sensor_msgs/Image (Bool)
     mopat/tracking/occ_map                -  sensor_msgs/Image (Bool)
 Published topics:
@@ -29,8 +28,6 @@ import matplotlib.pyplot as plt
 #Global variables
 occ_map = None              #Predifined global occ_map
 static_config = None        #Predefined global static_config
-screen_size = None          #Predefined global screen_size
-robot_num = 0               #Number of robots in sumulation
 robot_starts = {}           #Dict - robot_index : robot_start
 robot_goals = {}            #Dict - robot_index : robot_goal
 got_occ_map = False         #Flag - True if occ_map data received
@@ -49,10 +46,8 @@ def occ_map_cb(data):
     '''
     global got_occ_map
     global occ_map
-    global screen_size
     if not got_occ_map:
         occ_map = bridge.imgmsg_to_cv2(data, desired_encoding = "passthrough")
-        screen_size = occ_map.shape #Set screen size using occ_map
         got_occ_map = True          #Flip flag
         rospy.loginfo("LOG: Got occupancy map")
 
@@ -88,15 +83,6 @@ def robot_goals_cb(data):
     global robot_goals
     for i in range(0,len(data.data)//2):
         robot_goals[i] = (data.data[i*2], data.data[i*2+1])
-
-def robot_num_cb(data):
-    '''
-    Get user defined number of robots
-    Arguments:
-        data    :   ROS std_msgs/UInt32
-    '''
-    global robot_num
-    robot_num = data.data
 
 class robot_plan():
     '''
@@ -145,11 +131,12 @@ def plot_node():
     #Subscribers
     rospy.Subscriber("mopat/robot/robot_starts", UInt32MultiArray, robot_starts_cb)
     rospy.Subscriber("mopat/robot/robot_goals", UInt32MultiArray, robot_goals_cb)
-    rospy.Subscriber("mopat/robot/robot_num", UInt32, robot_num_cb)
     rospy.Subscriber("mopat/tracking/occ_map", Image, occ_map_cb)
     rospy.Subscriber("mopat/tracking/static_config", Image, config_space_cb)
     #Plot!
     while not rospy.is_shutdown():
+        #Always check the number of robots
+        robot_num = rospy.get_param("/user/robot_num")
         #Wait for occ_map and static_config
         if not (got_occ_map and got_static_config):
             rospy.sleep(1)

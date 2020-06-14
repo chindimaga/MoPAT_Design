@@ -8,7 +8,6 @@ Subscribed topics:
     mopat/tracking/static_config          -   sensor_msgs/Image (Bool)
     mopat/robot/robot_starts              -   std_msgs/UInt32MultiArray
     mopat/robot/robot_goals               -   std_msgs/UInt32MultiArray
-    mopat/robot/robot_num                 -   std_msgs/UInt32
 Published topics:
     mopat/control/motion_plan_{i}         -   std_msgs/UInt32MultiArrays
     mopat/control/motion_plans_done       -   std_msgs/Bool
@@ -38,7 +37,6 @@ from algorithms.mopat_astar_ros import Astar
 motion_plans_done = Bool()          #Flag - Bool type rosmsg
 static_config = None                #Predefined global static_config
 screen_size = None                  #Predefined global static_config
-robot_num = 0                       #Number of robots in simulation
 robot_starts = {}                   #Dict - robot_index : robot_start
 robot_goals  = {}                   #Dict - robot_index : robot_goal
 motion_plans = {}                   #Dict - robot_index : robot_plan
@@ -84,15 +82,6 @@ def robot_goals_cb(data):
     for i in range(0,len(data.data)//2):
         robot_goals[i] = (data.data[i*2], data.data[i*2+1])
 
-def robot_num_cb(data):
-    '''
-    Get user defined number of robots
-    Arguments:
-        data    :   ROS std_msgs/UInt32
-    '''
-    global robot_num
-    robot_num = data.data
-
 def convplan2multiarray(robot_index, px, py):
     '''
     Function to convert motion_plan list to rosmsg type
@@ -128,12 +117,13 @@ def motion_planner_node():
     rospy.Subscriber("mopat/tracking/static_config", Image, config_space_cb)
     rospy.Subscriber("mopat/robot/robot_starts", UInt32MultiArray, robot_starts_cb)
     rospy.Subscriber("mopat/robot/robot_goals", UInt32MultiArray, robot_goals_cb)
-    rospy.Subscriber("mopat/robot/robot_num", UInt32, robot_num_cb)
     pub_done = rospy.Publisher("mopat/control/motion_plans_done", Bool, queue_size = 1)
     #Set rate
     rate = rospy.Rate(1)
     #Plan!
     while not rospy.is_shutdown():
+        #Always check the number of robots
+        robot_num = rospy.get_param("/user/robot_num")
         #Don't start until all static config is found and planners aren't started
         if got_static_config and not all_planners_started:
             #Don't run if simulation hasn't started yet
