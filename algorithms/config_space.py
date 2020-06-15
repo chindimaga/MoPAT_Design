@@ -21,7 +21,7 @@ def gen_config(map, rad):
     #Extend map by rad
     config_space = ndimage.binary_dilation(map, structure = rad_struct)
     #Return
-    return config_space
+    return rad_struct, config_space
 
 def gen_struct(rad):
     """
@@ -60,8 +60,9 @@ if __name__ == "__main__":
     #Display boolean map
     plt.matshow(map)
     #Generate configuration space
-    config_space = gen_config(map, rad)
+    rad_struct, config_space = gen_config(map, rad)
     #Display configuration space
-    plt.matshow(config_space)
+    # plt.matshow(config_space)
+    plt.matshow(rad_struct)
     #Display
     plt.show()

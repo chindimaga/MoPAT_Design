@@ -1,8 +1,9 @@
-import numpy as np 
-import cv2 
+#Rishi
+import numpy as np
+import cv2
 
 
-image = cv2.imread('test.jpg',1) 
+image = cv2.imread('test.jpg',1)
 (h,w,d) = image.shape
 # print("width= {}, height = {} , depth = {} ".format(w,h,d))
 hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -10,21 +11,21 @@ hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 def center_finder(lower,upper,hsv):
 
     img = cv2.inRange(hsv, lower, upper)
-    kernel = np.ones((5,5), np.uint8) 
+    kernel = np.ones((5,5), np.uint8)
     # img_blur=cv2.GaussianBlur(input_y,kernel,1)
-    img_erosion = cv2.erode(img, kernel, iterations=3) 
+    img_erosion = cv2.erode(img, kernel, iterations=3)
     img_dilation = cv2.dilate(img_erosion, kernel, iterations=3)
     contours,__ = cv2.findContours(img_dilation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # cv2.imshow("img",img_dilation)
     l=len(contours)
     centers =[]
     for i in range(l):
-        center, _ = cv2.minEnclosingCircle(contours[i]) 
+        center, _ = cv2.minEnclosingCircle(contours[i])
         c=[]
         for x in center:
             c.append(int(x))
         centers.append(c)
-    return centers   
+    return centers
 
 def points_color(centers,color):
     dic={}
@@ -63,8 +64,8 @@ def identifier(points,w,color):
         f,l,r=arranger(np.array([p,p1,p2]))
         name= namer(f,l,r,color,w)
         dic[name]=np.array([f,l,r])
-    return dic  
-            
+    return dic
+
 pt_color={}
 
 lower_r = np.array([140,0,0], dtype = "uint8")
