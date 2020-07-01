@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<launch>
+  <!--MoPAT launch script-->
+  <!--Run scripts-->
+  <node name="simulator_node" pkg="mopat_pkg" type="simulator_node.py" output="screen"/>
+  <node name="config_space_node" pkg="mopat_pkg" type="config_space_node.py" output="screen"/>
+  <node name="motion_planner_node" pkg="mopat_pkg" type="motion_planner_node.py" output="screen"/>
+  <node name="multi_robot_coordinator_node" pkg="mopat_pkg" type="multi_robot_coordinator_node.py" output="screen"/>
+  <node name="occ_map_node" pkg="mopat_pkg" type="occ_map_node.py" output="screen"/>
+  <node name="plot_node" pkg="mopat_pkg" type="plot_node.py" output="screen"/>
+  <!--Set parameters-->
+  <param name="/sim/screen_size" value="500" type="int"/>
+  <param name="/user/robot_num" value="0" type="int"/>
+</launch>
