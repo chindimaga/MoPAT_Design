@@ -3,12 +3,12 @@
 #Discretization node - 05-07-20
 
 '''
-This node discretizes the configuration space into smaller parts
+This node discretizes the configuration space into 1/2^2 scale
 for faster path planning
 Subscribed topics:
     mopat/tracking/static_config        -   sensor_msgs/Image (Bool)
 Published topics:
-    mopat/control/discrete_space        -   sensor_msgs/Image (Bool)
+    mopat/control/discrete_config       -   sensor_msgs/Image (Bool)
 '''
 
 #Import libraries
@@ -19,11 +19,12 @@ from sensor_msgs.msg import Image
 #Others
 import sys
 import os
-import numpy
+import numpy as np
 
 #Global variables
 config_space = None
 got_config_space = False
+samp_size = 2
 
 bridge = CvBridge()
 
@@ -48,17 +49,26 @@ def discretization_node():
     #Global variables
     global config_space
     global got_config_space
+    global samp_size
     #Initialize node
     rospy.init_node("discretization_node")
     rospy.loginfo("INIT: Started Discretization Node")
     #Subsribers and Publishers
     rospy.Subscriber("mopat/tracking/static_config", Image, config_space_cb)
-    pub = rospy.Publisher("mopat/tracking/discretization_node", Image, queue_size=1)
+    pub = rospy.Publisher("mopat/control/discrete_config", Image, queue_size=1)
+    #Get sampling parameter
+    samp_size = rospy.get_param("/control/sampling_size")
     #Set rate
     rate = rospy.Rate(1)
     #Discretize!
     while not rospy.is_shutdown():
-
+        if got_config_space:
+            #Subsample 1/2^2
+            discrete_config = config_space[::samp_size,::samp_size]
+            pub.publish(bridge.cv2_to_imgmsg(discrete_config.astype(np.uint8), encoding="passthrough"))
+            got_config_space = False
+            rospy.sleep(5)
+        rate.sleep()
 
 if __name__ == "__main__":
     try:

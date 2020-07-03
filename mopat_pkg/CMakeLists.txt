@@ -165,6 +165,7 @@ include_directories(
 ## in contrast to setup.py, you can choose the destination
 install(PROGRAMS
  scripts/config_space_node.py
+ scripts/discretization_node.py
  scripts/formation_sim_node.py
  scripts/launch_mopat.py
  scripts/motion_planner_node.py

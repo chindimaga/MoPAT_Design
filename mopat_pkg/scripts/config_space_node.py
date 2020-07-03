@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #MoPAT Design Lab - Guining Pertin
 #Configuration space node - 12-05-20
-#!user/bin/env/python
+
 '''
 This node generates the configuration space for the given occ_map
 Subscribed topics:

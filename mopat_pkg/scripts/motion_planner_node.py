@@ -35,32 +35,51 @@ from algorithms.mopat_astar_ros import Astar
 
 #Global variables
 motion_plans_done = Bool()          #Flag - Bool type rosmsg
-static_config = None                #Predefined global static_config
+samp_size = 2                       #Int  - Sampling size
+# static_config = None                #Predefined global static_config
+discrete_config = None              #Predefined global discrete_config
 screen_size = None                  #Predefined global static_config
 robot_starts = {}                   #Dict - robot_index : robot_start
 robot_goals  = {}                   #Dict - robot_index : robot_goal
 motion_plans = {}                   #Dict - robot_index : robot_plan
-got_static_config = False           #Flag - True if static_config received
+# got_static_config = False           #Flag - True if static_config received
+got_discrete_config = False         #Flag - True if discrete_config received
 all_planners_started = False        #Flag - True if all motion_planners started
 motion_plans_done.data = False      #Flag - True if all motion plans done
 
 bridge = CvBridge()                 #Required for rosmsg-cv conversion
 
-def config_space_cb(data):
+# def config_space_cb(data):
+#     '''
+#     Get config_space data
+#     Arguments:
+#         data    :   ROS sensor_msgs/Image
+#     '''
+#     global got_static_config
+#     global static_config
+#     global screen_size
+#     if not got_static_config:
+#         static_config = bridge.imgmsg_to_cv2(data, desired_encoding = "passthrough")
+#         static_config = static_config.astype(bool)
+#         screen_size = static_config.shape       #Set screen size using config_space
+#         got_static_config = True                #Flip flag
+#         rospy.loginfo("LOG: Got static configuration space")
+
+def discrete_config_cb(data):
     '''
-    Get config_space data
+    Get discrete_config data
     Arguments:
         data    :   ROS sensor_msgs/Image
     '''
-    global got_static_config
-    global static_config
+    global got_discrete_config
+    global discrete_config
     global screen_size
-    if not got_static_config:
-        static_config = bridge.imgmsg_to_cv2(data, desired_encoding = "passthrough")
-        static_config = static_config.astype(bool)
-        screen_size = static_config.shape       #Set screen size using config_space
-        got_static_config = True                #Flip flag
-        rospy.loginfo("LOG: Got static configuration space")
+    if not got_discrete_config:
+        discrete_config = bridge.imgmsg_to_cv2(data, desired_encoding = "passthrough")
+        discrete_config = discrete_config.astype(bool)
+        screen_size = discrete_config.shape       #Set screen size using config_space
+        got_discrete_config = True                   #Flip flag
+        rospy.loginfo("LOG: Got disceretized configuration space")
 
 def robot_starts_cb(data):
     '''
@@ -70,7 +89,7 @@ def robot_starts_cb(data):
     '''
     global robot_starts
     for i in range(0,len(data.data)//2):
-        robot_starts[i] = (data.data[i*2], data.data[i*2+1])
+        robot_starts[i] = (data.data[i*2]//samp_size, data.data[i*2+1]//samp_size)
 
 def robot_goals_cb(data):
     '''
@@ -80,7 +99,7 @@ def robot_goals_cb(data):
     '''
     global robot_goals
     for i in range(0,len(data.data)//2):
-        robot_goals[i] = (data.data[i*2], data.data[i*2+1])
+        robot_goals[i] = (data.data[i*2]//samp_size, data.data[i*2+1]//samp_size)
 
 def convplan2multiarray(robot_index, px, py):
     '''
@@ -95,18 +114,20 @@ def convplan2multiarray(robot_index, px, py):
     motion_plans[robot_index] = UInt32MultiArray()
     #Append data in x,y form
     for i in range(len(px)):
-        motion_plans[robot_index].data.append(px[i])
-        motion_plans[robot_index].data.append(py[i])
+        motion_plans[robot_index].data.append(px[i]*samp_size)
+        motion_plans[robot_index].data.append(py[i]*samp_size)
 
 def motion_planner_node():
     '''
     Create motion planner node
     '''
     #Global variables
-    global static_config
+    # global static_config
+    global discrete_config
     global all_planners_started
     global motion_plans
     global motion_plans_done
+    global samp_size
     #Local variables
     robot_planners   = {}       #Dict - robot_index : robot A* object
     robot_publishers = {}       #Dict - robot_index : robot publisher object
@@ -114,10 +135,13 @@ def motion_planner_node():
     rospy.init_node("motion_planner_node")
     rospy.loginfo("INIT: Started A* Motion Plan Generator node")
     #Subscribers and publishers
-    rospy.Subscriber("mopat/tracking/static_config", Image, config_space_cb)
+    rospy.Subscriber("mopat/control/discrete_config", Image, discrete_config_cb)
+    # rospy.Subscriber("mopat/tracking/static_config", Image, config_space_cb)
     rospy.Subscriber("mopat/robot/robot_starts", UInt32MultiArray, robot_starts_cb)
     rospy.Subscriber("mopat/robot/robot_goals", UInt32MultiArray, robot_goals_cb)
     pub_done = rospy.Publisher("mopat/control/motion_plans_done", Bool, queue_size = 1)
+    #Get sampling size
+    samp_size = rospy.get_param("/control/sampling_size")
     #Set rate
     rate = rospy.Rate(1)
     #Plan!
@@ -125,12 +149,12 @@ def motion_planner_node():
         #Always check the number of robots
         robot_num = rospy.get_param("/user/robot_num")
         #Don't start until all static config is found and planners aren't started
-        if got_static_config and not all_planners_started:
+        if got_discrete_config and not all_planners_started:
             #Don't run if simulation hasn't started yet
             if len(robot_goals) == robot_num and robot_num != 0:
                 for i in range(robot_num):
                     #New planner for each robot
-                    robot_planners[i] = Astar(i, static_config, 0, 0,
+                    robot_planners[i] = Astar(i, discrete_config, 0, 0,
                                               screen_size[1], screen_size[0])
                     robot_planners[i].set_params(robot_starts[i], robot_goals[i], screen_size)
                     #Start planners and publishers
