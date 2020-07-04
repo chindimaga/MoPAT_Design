@@ -79,9 +79,9 @@ def simulator_node():
     pub_goals = rospy.Publisher("mopat/robot/robot_goals", UInt32MultiArray, queue_size=1)
     pub_positions = rospy.Publisher("mopat/robot/robot_positions", UInt32MultiArray, queue_size=1)
     #Create map
-    generate_empty_map(space)
+    # generate_empty_map(space)
     # generate_test_map(space)
-    # generate_random_map(space)
+    generate_random_map(space)
     rospy.loginfo("USER: Enter initial positions now")
     #Simulate!
     while not rospy.is_shutdown():
@@ -89,9 +89,11 @@ def simulator_node():
             #Exiting
             if event.type == QUIT:
                 rospy.loginfo("EXIT: Exiting simulation")
+                rospy.set_param("/user/end_sim", 1)
                 sys.exit(0)
             elif event.type == KEYDOWN and (event.key in [K_ESCAPE, K_q]):
                 rospy.loginfo("EXIT: Exiting simulation")
+                rospy.set_param("/user/end_sim", 1)
                 sys.exit(0)
             #Get user input
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -167,6 +169,7 @@ def simulator_node():
                 rospy.loginfo("LOG: All Robots Reached, Simulation Completed!")
                 rospy.loginfo("EXIT: Exiting simulation in 5s")
                 rospy.sleep(5)
+                rospy.set_param("/user/end_sim", 1)
                 sys.exit(0)
         #Step up
         pygame.display.flip()
@@ -188,5 +191,6 @@ if __name__ == "__main__":
     try:
         simulator_node()
     except rospy.ROSInterruptException:
+        rospy.set_param("/user/end_sim", 1)
         sys.exit(0)
         pass

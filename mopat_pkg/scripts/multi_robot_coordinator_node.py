@@ -29,6 +29,7 @@ Commands:
 import rospy
 from std_msgs.msg import UInt32MultiArray, Bool, ByteMultiArray, String
 #Others
+import sys
 import numpy as np
 import itertools
 
@@ -85,7 +86,7 @@ def multi_robot_coordinator_node():
     mrc_output_flags = ByteMultiArray()     #Byte Flag - ByteMultiArray type rosmsg
     #Initialize node
     rospy.init_node("multi_robot_coordinator_node")
-    rospy.loginfo("INIT: Started Multi-Robot Coordinator Node")
+    rospy.loginfo("INIT: Started Multi-Robot Coordinator node")
     #Subscribers and publisher
     rospy.Subscriber("mopat/robot/robot_positions", UInt32MultiArray, robot_positions_cb)
     rospy.Subscriber("mopat/control/motion_plans_done", Bool, motion_plans_done_cb)
@@ -94,7 +95,11 @@ def multi_robot_coordinator_node():
     rate = rospy.Rate(1)
     #Coordinate!
     while not rospy.is_shutdown():
-        robot_num = len(robot_positions)
+        #Always check if the simulation is ending
+        if rospy.get_param("/user/end_sim"):
+            rospy.loginfo("EXIT: Exiting Multi-Robot Coordinator node")
+            sys.exit(0)
+        robot_num = rospy.get_param("/user/robot_num")
         #Don't start until simulation started
         if robot_num != 0:
             mrc_output_flags.data.clear()       #Clear flags everytime

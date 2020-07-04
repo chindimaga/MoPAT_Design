@@ -19,6 +19,7 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 #Others
+import sys
 import cv2
 import numpy as np
 
@@ -58,6 +59,10 @@ def occ_map_node():
     rate = rospy.Rate(1)
     #Binarize!
     while not rospy.is_shutdown():
+        #Always check if the simulation is ending
+        if rospy.get_param("/user/end_sim"):
+            rospy.loginfo("EXIT: Exiting Occupancy Map Generator node")
+            sys.exit(0)
         #Don't run until raw_image is found
         if got_raw_image:
             #Get occupancy map

@@ -146,6 +146,10 @@ def motion_planner_node():
     rate = rospy.Rate(1)
     #Plan!
     while not rospy.is_shutdown():
+        #Always check if the simulation is ending
+        if rospy.get_param("/user/end_sim"):
+            rospy.loginfo("EXIT: Exiting A* Motion Plan Generator node")
+            sys.exit(0)
         #Always check the number of robots
         robot_num = rospy.get_param("/user/robot_num")
         #Don't start until all static config is found and planners aren't started

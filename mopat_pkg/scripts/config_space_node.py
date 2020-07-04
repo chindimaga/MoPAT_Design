@@ -65,6 +65,10 @@ def config_space_node():
     rate = rospy.Rate(1)
     #Dilate!
     while not rospy.is_shutdown():
+        #Always check if the simulation is ending
+        if rospy.get_param("/user/end_sim"):
+            rospy.loginfo("EXIT: Exiting Configuration Space Generator node")
+            sys.exit(0)
         #Don't generate until occ map is found
         if got_occ_map:
             #Get configuration space

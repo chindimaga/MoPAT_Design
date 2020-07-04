@@ -22,11 +22,11 @@ import os
 import numpy as np
 
 #Global variables
-config_space = None
-got_config_space = False
-samp_size = 2
+config_space = None         #Predefined global config_space
+got_config_space = False    #Flag - True if static_config received
+samp_size = 2               #Int  - Sampling size
 
-bridge = CvBridge()
+bridge = CvBridge()         #Required for rosmsg-cv conversion
 
 def config_space_cb(data):
     '''
@@ -52,7 +52,7 @@ def discretization_node():
     global samp_size
     #Initialize node
     rospy.init_node("discretization_node")
-    rospy.loginfo("INIT: Started Discretization Node")
+    rospy.loginfo("INIT: Started Discretization node")
     #Subsribers and Publishers
     rospy.Subscriber("mopat/tracking/static_config", Image, config_space_cb)
     pub = rospy.Publisher("mopat/control/discrete_config", Image, queue_size=1)
@@ -62,11 +62,17 @@ def discretization_node():
     rate = rospy.Rate(1)
     #Discretize!
     while not rospy.is_shutdown():
+        #Always check if the simulation is ending
+        if rospy.get_param("/user/end_sim"):
+            rospy.loginfo("EXIT: Exiting Discretization node")
+            sys.exit(0)
         if got_config_space:
             #Subsample 1/2^2
             discrete_config = config_space[::samp_size,::samp_size]
+            #Publish stuff
             pub.publish(bridge.cv2_to_imgmsg(discrete_config.astype(np.uint8), encoding="passthrough"))
             got_config_space = False
+            #If published, wait for 5s
             rospy.sleep(5)
         rate.sleep()
 
