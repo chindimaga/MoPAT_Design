@@ -23,6 +23,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from std_msgs.msg import UInt32MultiArray, UInt32
 #Others
+import sys
 import matplotlib.pyplot as plt
 
 #Global variables
@@ -127,7 +128,7 @@ def plot_node():
     plotted_occ_config = False              #Flag - True if occupancy+static_config plotted
     #Initialize node
     rospy.init_node("plot_node")
-    rospy.loginfo("INIT: Started MoPAT Plotter Node")
+    rospy.loginfo("INIT: Started MoPAT Plotter node")
     #Subscribers
     rospy.Subscriber("mopat/robot/robot_starts", UInt32MultiArray, robot_starts_cb)
     rospy.Subscriber("mopat/robot/robot_goals", UInt32MultiArray, robot_goals_cb)
@@ -135,6 +136,10 @@ def plot_node():
     rospy.Subscriber("mopat/tracking/static_config", Image, config_space_cb)
     #Plot!
     while not rospy.is_shutdown():
+        #Always check if the simulation is ending
+        if rospy.get_param("/user/end_sim"):
+            rospy.loginfo("EXIT: Exiting MoPAT Plotter node")
+            sys.exit(0)
         #Always check the number of robots
         robot_num = rospy.get_param("/user/robot_num")
         #Wait for occ_map and static_config
