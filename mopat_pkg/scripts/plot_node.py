@@ -28,6 +28,7 @@ import matplotlib.pyplot as plt
 
 #Global variables
 occ_map = None              #Predifined global occ_map
+samp_size = 2               #Predefined sampling size
 static_config = None        #Predefined global static_config
 robot_starts = {}           #Dict - robot_index : robot_start
 robot_goals = {}            #Dict - robot_index : robot_goal
@@ -129,6 +130,8 @@ def plot_node():
     #Initialize node
     rospy.init_node("plot_node")
     rospy.loginfo("INIT: Started MoPAT Plotter node")
+    #Get sampling size
+    samp_size = rospy.get_param("/control/sampling_size")
     #Subscribers
     rospy.Subscriber("mopat/robot/robot_starts", UInt32MultiArray, robot_starts_cb)
     rospy.Subscriber("mopat/robot/robot_goals", UInt32MultiArray, robot_goals_cb)
@@ -173,7 +176,7 @@ def plot_node():
                         pathx2plot = robot_motion_plans[i].gen_pathx
                         pathy2plot = robot_motion_plans[i].gen_pathy
                         #Don't plot if planner didn't find path
-                        if pathx2plot[0] != 99999:
+                        if pathx2plot[0] != 99999*samp_size:
                             plt.plot(pathx2plot,
                                      pathy2plot,
                                      colors[i])

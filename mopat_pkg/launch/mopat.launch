@@ -11,6 +11,7 @@
   <node name="plot_node" pkg="mopat_pkg" type="plot_node.py" output="screen"/>
   <!--Set parameters-->
   <param name="/control/sampling_size" value="2" type="int"/>
+  <param name="/sim/screen_size" value="500" type="int"/>
   <param name="/user/robot_num" value="0" type="int"/>
   <param name="/user/end_sim" value="0" type="bool"/>
 </launch>
