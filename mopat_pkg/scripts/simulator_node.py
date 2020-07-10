@@ -5,13 +5,13 @@
 '''
 This node runs pymunk simulation
 Subscribed topics:
-    mopat/control/motion_plan_{i}       -   std_msgs/UInt32MultiArrays
-    mopat/control/mrc_output_flags      -   std_msgs/ByteMultiArray
+    /mopat/control/motion_plan_{i}       -   std_msgs/UInt32MultiArrays
+    /mopat/control/mrc_output_flags      -   std_msgs/ByteMultiArray
 Published topics:
-    mopat/tracking/raw_image            -   sensor_msgs/Image (BGR)
-    mopat/robot/robot_starts            -   std_msgs/UInt32MultiArray
-    mopat/robot/robot_goals             -   std_msgs/UInt32MultiArray
-    mopat/robot/robot_positions         -   std_msgs/UInt32MultiArray
+    /mopat/tracking/raw_image            -   sensor_msgs/Image (BGR)
+    /mopat/robot/robot_starts            -   std_msgs/UInt32MultiArray
+    /mopat/robot/robot_goals             -   std_msgs/UInt32MultiArray
+    /mopat/robot/robot_positions         -   std_msgs/UInt32MultiArray
 Work:
     Uses pymunk to run simulation and runs robot threads
 '''
@@ -74,10 +74,10 @@ def simulator_node():
     space = pymunk.Space()                          #Game space
     #Subscriber and publishers
     rospy.Subscriber("/mopat/control/mrc_output_flags", ByteMultiArray, mrc_cb)
-    pub_raw = rospy.Publisher("mopat/tracking/raw_image", Image, queue_size=1)
-    pub_starts = rospy.Publisher("mopat/robot/robot_starts", UInt32MultiArray, queue_size=1)
-    pub_goals = rospy.Publisher("mopat/robot/robot_goals", UInt32MultiArray, queue_size=1)
-    pub_positions = rospy.Publisher("mopat/robot/robot_positions", UInt32MultiArray, queue_size=1)
+    pub_raw = rospy.Publisher("/mopat/tracking/raw_image", Image, queue_size=1)
+    pub_starts = rospy.Publisher("/mopat/robot/robot_starts", UInt32MultiArray, queue_size=1)
+    pub_goals = rospy.Publisher("/mopat/robot/robot_goals", UInt32MultiArray, queue_size=1)
+    pub_positions = rospy.Publisher("/mopat/robot/robot_positions", UInt32MultiArray, queue_size=1)
     #Create map
     # generate_empty_map(space)
     # generate_test_map(space)
@@ -118,7 +118,7 @@ def simulator_node():
                     starts_multiarray.data.append(mouse_x)
                     starts_multiarray.data.append(mouse_y)
                     #Start subscribers to motion plans for individual robots
-                    rospy.Subscriber("mopat/control/motion_plan_{0}".format(robot_index),
+                    rospy.Subscriber("/mopat/control/motion_plan_{0}".format(robot_index),
                                       UInt32MultiArray,
                                       robot_list[robot_index].motion_plan_cb)
                     robot_index += 1                #Increment start index

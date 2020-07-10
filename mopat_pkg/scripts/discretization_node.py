@@ -6,9 +6,9 @@
 This node discretizes the configuration space into 1/2^2 scale
 for faster path planning
 Subscribed topics:
-    mopat/tracking/static_config        -   sensor_msgs/Image (Bool)
+    /mopat/tracking/static_config        -   sensor_msgs/Image (Bool)
 Published topics:
-    mopat/control/discrete_config       -   sensor_msgs/Image (Bool)
+    /mopat/control/discrete_config       -   sensor_msgs/Image (Bool)
 '''
 
 #Import libraries
@@ -54,8 +54,8 @@ def discretization_node():
     rospy.init_node("discretization_node")
     rospy.loginfo("INIT: Started Discretization node")
     #Subsribers and Publishers
-    rospy.Subscriber("mopat/tracking/static_config", Image, config_space_cb)
-    pub = rospy.Publisher("mopat/control/discrete_config", Image, queue_size=1)
+    rospy.Subscriber("/mopat/tracking/static_config", Image, config_space_cb)
+    pub = rospy.Publisher("/mopat/control/discrete_config", Image, queue_size=1)
     #Get sampling parameter
     samp_size = rospy.get_param("/control/sampling_size")
     #Set rate

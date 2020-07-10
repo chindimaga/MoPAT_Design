@@ -5,11 +5,11 @@
 '''
 This node coordinates the control of all the robots
 Subscribed_topics:
-    mopat/robot/robot_positions         -   std_msgs/UInt32MultiArray
-    mopat/control/motion_plans_done     -   std_msgs/Bool
-    mopat/user/user_control             -   std_msgs/String
+    /mopat/robot/robot_positions         -   std_msgs/UInt32MultiArray
+    /mopat/control/motion_plans_done     -   std_msgs/Bool
+    /mopat/user/user_control             -   std_msgs/String
 Published_topics:
-    mopat/control/mrc_output_flags      -   std_msgs/ByteMultiArray
+    /mopat/control/mrc_output_flags      -   std_msgs/ByteMultiArray
 Work:
     Coordinate start of all robots together
     Coordinate collision control of robots
@@ -88,9 +88,9 @@ def multi_robot_coordinator_node():
     rospy.init_node("multi_robot_coordinator_node")
     rospy.loginfo("INIT: Started Multi-Robot Coordinator node")
     #Subscribers and publisher
-    rospy.Subscriber("mopat/robot/robot_positions", UInt32MultiArray, robot_positions_cb)
-    rospy.Subscriber("mopat/control/motion_plans_done", Bool, motion_plans_done_cb)
-    pub = rospy.Publisher("mopat/control/mrc_output_flags", ByteMultiArray, queue_size = 5)
+    rospy.Subscriber("/mopat/robot/robot_positions", UInt32MultiArray, robot_positions_cb)
+    rospy.Subscriber("/mopat/control/motion_plans_done", Bool, motion_plans_done_cb)
+    pub = rospy.Publisher("/mopat/control/mrc_output_flags", ByteMultiArray, queue_size = 5)
     #Set rate
     rate = rospy.Rate(1)
     #Coordinate!

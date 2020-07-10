@@ -5,11 +5,11 @@
 '''
 This node plots live data from all the nodes
 Subscribed topics:
-    mopat/control/motion_plan_{i}        -  std_msgs/UInt32MultiArrays
-    mopat/robot/robot_starts           -  std_msgs/UInt32MultiArray
-    mopat/robot/robot_goals            -  std_msgs/UInt32MultiArray
-    mopat/tracking/static_config          -  sensor_msgs/Image (Bool)
-    mopat/tracking/occ_map                -  sensor_msgs/Image (Bool)
+    /mopat/control/motion_plan_{i}        -  std_msgs/UInt32MultiArrays
+    /mopat/robot/robot_starts           -  std_msgs/UInt32MultiArray
+    /mopat/robot/robot_goals            -  std_msgs/UInt32MultiArray
+    /mopat/tracking/static_config          -  sensor_msgs/Image (Bool)
+    /mopat/tracking/occ_map                -  sensor_msgs/Image (Bool)
 Published topics:
     None
 Work:
@@ -133,10 +133,10 @@ def plot_node():
     #Get sampling size
     samp_size = rospy.get_param("/control/sampling_size")
     #Subscribers
-    rospy.Subscriber("mopat/robot/robot_starts", UInt32MultiArray, robot_starts_cb)
-    rospy.Subscriber("mopat/robot/robot_goals", UInt32MultiArray, robot_goals_cb)
-    rospy.Subscriber("mopat/tracking/occ_map", Image, occ_map_cb)
-    rospy.Subscriber("mopat/tracking/static_config", Image, config_space_cb)
+    rospy.Subscriber("/mopat/robot/robot_starts", UInt32MultiArray, robot_starts_cb)
+    rospy.Subscriber("/mopat/robot/robot_goals", UInt32MultiArray, robot_goals_cb)
+    rospy.Subscriber("/mopat/tracking/occ_map", Image, occ_map_cb)
+    rospy.Subscriber("/mopat/tracking/static_config", Image, config_space_cb)
     #Plot!
     while not rospy.is_shutdown():
         #Always check if the simulation is ending

@@ -5,9 +5,9 @@
 '''
 This node generates the occupancy map given the raw image
 Subscribed topics:
-    mopat/tracking/raw_image         -   sensor_msgs/Image (BGR)
+    /mopat/tracking/raw_image         -   sensor_msgs/Image (BGR)
 Publised topics:
-    mopat/tracking/occ_map           -   sensor_msgs/Image (Bool)
+    /mopat/tracking/occ_map           -   sensor_msgs/Image (Bool)
 Work:
     Uses cv2 to threshold raw simulator image and converts to boolean obstacle map
 '''
@@ -53,8 +53,8 @@ def occ_map_node():
     rospy.init_node("occ_map_node")
     rospy.loginfo("INIT: Started Occupancy Map Generator node")
     #Subscribers and publishers
-    rospy.Subscriber("mopat/tracking/raw_image", Image, raw_image_cb)
-    pub = rospy.Publisher("mopat/tracking/occ_map", Image, queue_size=5)
+    rospy.Subscriber("/mopat/tracking/raw_image", Image, raw_image_cb)
+    pub = rospy.Publisher("/mopat/tracking/occ_map", Image, queue_size=5)
     #Set rate
     rate = rospy.Rate(1)
     #Binarize!
