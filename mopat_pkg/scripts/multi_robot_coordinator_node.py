@@ -96,10 +96,8 @@ def multi_robot_coordinator_node():
     #Coordinate!
     while not rospy.is_shutdown():
         #Always check if the simulation is ending
-        if rospy.get_param("/user/end_sim"):
-            rospy.loginfo("EXIT: Exiting Multi-Robot Coordinator node")
-            sys.exit(0)
-        robot_num = rospy.get_param("/user/robot_num")
+        if rospy.get_param("/mopat/user/end_sim"): break
+        robot_num = rospy.get_param("/mopat/user/robot_num")
         #Don't start until simulation started
         if robot_num != 0:
             mrc_output_flags.data.clear()       #Clear flags everytime
@@ -124,6 +122,9 @@ def multi_robot_coordinator_node():
                         mrc_output_flags.data[i] = mrc_output_flags.data[i] or 0b00000001
             pub.publish(mrc_output_flags)
         rate.sleep()
+    #End node
+    rospy.loginfo("EXIT: Exiting Multi-Robot Coordinator node")
+    sys.exit(0)
 
 if __name__ == "__main__":
     try:

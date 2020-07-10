@@ -141,17 +141,15 @@ def motion_planner_node():
     rospy.Subscriber("/mopat/robot/robot_goals", UInt32MultiArray, robot_goals_cb)
     pub_done = rospy.Publisher("/mopat/control/motion_plans_done", Bool, queue_size = 1)
     #Get sampling size
-    samp_size = rospy.get_param("/control/sampling_size")
+    samp_size = rospy.get_param("/mopat/control/sampling_size")
     #Set rate
     rate = rospy.Rate(1)
     #Plan!
     while not rospy.is_shutdown():
         #Always check if the simulation is ending
-        if rospy.get_param("/user/end_sim"):
-            rospy.loginfo("EXIT: Exiting A* Motion Plan Generator node")
-            sys.exit(0)
+        if rospy.get_param("/mopat/user/end_sim"): break
         #Always check the number of robots
-        robot_num = rospy.get_param("/user/robot_num")
+        robot_num = rospy.get_param("/mopat/user/robot_num")
         #Don't start until all static config is found and planners aren't started
         if got_discrete_config and not all_planners_started:
             #Don't run if simulation hasn't started yet
@@ -189,6 +187,9 @@ def motion_planner_node():
             continue
         pub_done.publish(motion_plans_done)     #Necessary evil
         rate.sleep()
+    #End node
+    rospy.loginfo("EXIT: Exiting A* Motion Plan Generator node")
+    sys.exit(0)
 
 if __name__ == "__main__":
     try:

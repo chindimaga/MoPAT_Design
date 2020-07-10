@@ -57,15 +57,13 @@ def discretization_node():
     rospy.Subscriber("/mopat/tracking/static_config", Image, config_space_cb)
     pub = rospy.Publisher("/mopat/control/discrete_config", Image, queue_size=1)
     #Get sampling parameter
-    samp_size = rospy.get_param("/control/sampling_size")
+    samp_size = rospy.get_param("/mopat/control/sampling_size")
     #Set rate
     rate = rospy.Rate(1)
     #Discretize!
     while not rospy.is_shutdown():
         #Always check if the simulation is ending
-        if rospy.get_param("/user/end_sim"):
-            rospy.loginfo("EXIT: Exiting Discretization node")
-            sys.exit(0)
+        if rospy.get_param("/mopat/user/end_sim"): break
         if got_config_space:
             #Subsample 1/2^2
             discrete_config = config_space[::samp_size,::samp_size]
@@ -75,6 +73,9 @@ def discretization_node():
             #If published, wait for 5s
             rospy.sleep(5)
         rate.sleep()
+    #End node
+    rospy.loginfo("EXIT: Exiting Discretization node")
+    sys.exit(0)
 
 if __name__ == "__main__":
     try:

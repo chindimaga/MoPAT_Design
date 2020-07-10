@@ -66,9 +66,7 @@ def config_space_node():
     #Dilate!
     while not rospy.is_shutdown():
         #Always check if the simulation is ending
-        if rospy.get_param("/user/end_sim"):
-            rospy.loginfo("EXIT: Exiting Configuration Space Generator node")
-            sys.exit(0)
+        if rospy.get_param("/mopat/user/end_sim"): break
         #Don't generate until occ map is found
         if got_occ_map:
             #Get configuration space
@@ -78,6 +76,9 @@ def config_space_node():
             got_occ_map = False     #Flip flag
             rospy.sleep(5)
         rate.sleep()
+    #End node
+    rospy.loginfo("EXIT: Exiting Configuration Space Generator node")
+    sys.exit(0)
 
 if __name__ == "__main__":
     try:

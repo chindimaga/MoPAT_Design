@@ -101,7 +101,7 @@ class robot_plan():
         self.index = index              #Robot's index
         self.got_motion_plan = False    #Set local flag
         #Subscribe to ith robot's motion plan
-        rospy.Subscriber("mopat/control/motion_plan_{0}".format(index),
+        rospy.Subscriber("/mopat/control/motion_plan_{0}".format(index),
                          UInt32MultiArray, self.motion_plan_cb)
 
     def motion_plan_cb(self, data):
@@ -131,7 +131,7 @@ def plot_node():
     rospy.init_node("plot_node")
     rospy.loginfo("INIT: Started MoPAT Plotter node")
     #Get sampling size
-    samp_size = rospy.get_param("/control/sampling_size")
+    samp_size = rospy.get_param("/mopat/control/sampling_size")
     #Subscribers
     rospy.Subscriber("/mopat/robot/robot_starts", UInt32MultiArray, robot_starts_cb)
     rospy.Subscriber("/mopat/robot/robot_goals", UInt32MultiArray, robot_goals_cb)
@@ -140,11 +140,9 @@ def plot_node():
     #Plot!
     while not rospy.is_shutdown():
         #Always check if the simulation is ending
-        if rospy.get_param("/user/end_sim"):
-            rospy.loginfo("EXIT: Exiting MoPAT Plotter node")
-            sys.exit(0)
+        if rospy.get_param("/mopat/user/end_sim"): break
         #Always check the number of robots
-        robot_num = rospy.get_param("/user/robot_num")
+        robot_num = rospy.get_param("/mopat/user/robot_num")
         #Wait for occ_map and static_config
         if not (got_occ_map and got_static_config):
             rospy.sleep(1)
@@ -182,6 +180,9 @@ def plot_node():
                                      colors[i])
             plt.show(block=False)
             plt.pause(0.01)
+    #End node
+    rospy.loginfo("EXIT: Exiting MoPAT Plotter node")
+    sys.exit(0)
 
 if __name__ == "__main__":
     try:
