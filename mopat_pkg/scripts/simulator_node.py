@@ -74,7 +74,7 @@ def simulator_node():
     space = pymunk.Space()                          #Game space
     #Subscriber and publishers
     rospy.Subscriber("/mopat/control/mrc_output_flags", ByteMultiArray, mrc_cb)
-    pub_raw = rospy.Publisher("/mopat/tracking/raw_image", Image, queue_size=1)
+    pub_raw = rospy.Publisher("/mopat/testbed/raw_image", Image, queue_size=1)
     pub_starts = rospy.Publisher("/mopat/robot/robot_starts", UInt32MultiArray, queue_size=1)
     pub_goals = rospy.Publisher("/mopat/robot/robot_goals", UInt32MultiArray, queue_size=1)
     pub_positions = rospy.Publisher("/mopat/robot/robot_positions", UInt32MultiArray, queue_size=1)

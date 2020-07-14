@@ -5,7 +5,7 @@
 '''
 This node gets the raw image from the camera and publishes it
 Published topics:
-    /mopat/tracking/raw_image           -   sensor_msgs/Image (int8)
+    /mopat/test_bed/raw_image           -   sensor_msgs/Image (BGR)
 Work:
     Uses OpenCV to turn on the camera and get raw image
 '''
@@ -31,7 +31,7 @@ def camera_node():
     rospy.init_node("camera_node")  #user /mopat/tracking ns
     rospy.loginfo("INIT: Started Camera node")
     #Publisher
-    pub = rospy.Publisher("/mopat/tracking/raw_image", Image, queue_size=2)
+    pub = rospy.Publisher("/mopat/testbed/raw_image", Image, queue_size=2)
     rate = rospy.Rate(60)
     #Start camera
     cap = cv2.VideoCapture(0)
