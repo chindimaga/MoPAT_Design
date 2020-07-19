@@ -5,13 +5,13 @@
 '''
 This node runs pymunk simulation
 Subscribed topics:
-    mopat/control/motion_plan_{i}       -   std_msgs/UInt32MultiArrays
-    mopat/control/mrc_output_flags      -   std_msgs/ByteMultiArray
+    /mopat/control/motion_plan_{i}       -   std_msgs/UInt32MultiArrays
+    /mopat/control/mrc_output_flags      -   std_msgs/ByteMultiArray
 Published topics:
-    mopat/tracking/raw_image            -   sensor_msgs/Image (BGR)
-    mopat/robot/robot_starts            -   std_msgs/UInt32MultiArray
-    mopat/robot/robot_goals             -   std_msgs/UInt32MultiArray
-    mopat/robot/robot_positions         -   std_msgs/UInt32MultiArray
+    /mopat/tracking/raw_image            -   sensor_msgs/Image (BGR)
+    /mopat/robot/robot_starts            -   std_msgs/UInt32MultiArray
+    /mopat/robot/robot_goals             -   std_msgs/UInt32MultiArray
+    /mopat/robot/robot_positions         -   std_msgs/UInt32MultiArray
 Work:
     Uses pymunk to run simulation and runs robot threads
 '''
@@ -67,17 +67,17 @@ def simulator_node():
     #Game initialization
     os.environ['SDL_VIDEO_WINDOW_POS'] = "+0,+50"   #Set position
     pygame.init()
-    pygame.display.set_caption("MoPAT Multi-Robot Simulator MkII")
+    pygame.display.set_caption("MoPAT Multi-Robot Simulator MkV")
     screen = pygame.display.set_mode(screen_size)
     draw_options = pymunk.pygame_util.DrawOptions(screen)
     clock = pygame.time.Clock()
     space = pymunk.Space()                          #Game space
     #Subscriber and publishers
     rospy.Subscriber("/mopat/control/mrc_output_flags", ByteMultiArray, mrc_cb)
-    pub_raw = rospy.Publisher("mopat/tracking/raw_image", Image, queue_size=1)
-    pub_starts = rospy.Publisher("mopat/robot/robot_starts", UInt32MultiArray, queue_size=1)
-    pub_goals = rospy.Publisher("mopat/robot/robot_goals", UInt32MultiArray, queue_size=1)
-    pub_positions = rospy.Publisher("mopat/robot/robot_positions", UInt32MultiArray, queue_size=1)
+    pub_raw = rospy.Publisher("/mopat/testbed/raw_image", Image, queue_size=1)
+    pub_starts = rospy.Publisher("/mopat/robot/robot_starts", UInt32MultiArray, queue_size=1)
+    pub_goals = rospy.Publisher("/mopat/robot/robot_goals", UInt32MultiArray, queue_size=1)
+    pub_positions = rospy.Publisher("/mopat/robot/robot_positions", UInt32MultiArray, queue_size=1)
     #Create map
     # generate_empty_map(space)
     # generate_test_map(space)
@@ -88,13 +88,9 @@ def simulator_node():
         for event in pygame.event.get():
             #Exiting
             if event.type == QUIT:
-                rospy.loginfo("EXIT: Exiting simulation")
-                rospy.set_param("/user/end_sim", 1)
-                sys.exit(0)
+                break
             elif event.type == KEYDOWN and (event.key in [K_ESCAPE, K_q]):
-                rospy.loginfo("EXIT: Exiting simulation")
-                rospy.set_param("/user/end_sim", 1)
-                sys.exit(0)
+                break
             #Get user input
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -118,14 +114,14 @@ def simulator_node():
                     starts_multiarray.data.append(mouse_x)
                     starts_multiarray.data.append(mouse_y)
                     #Start subscribers to motion plans for individual robots
-                    rospy.Subscriber("mopat/control/motion_plan_{0}".format(robot_index),
+                    rospy.Subscriber("/mopat/control/motion_plan_{0}".format(robot_index),
                                       UInt32MultiArray,
                                       robot_list[robot_index].motion_plan_cb)
                     robot_index += 1                #Increment start index
                 #If user inputs goal locations
                 else:
                     #Goal obstacle overlap check
-                    if raw_image[screen_size[1]-mouse_y, mouse_x][0] < 128:
+                    if raw_image[screen_size[1]-mouse_y, mouse_x][0] > 128:
                         #Set robot goal
                         robot_goals[robot_index] = (mouse_x, mouse_y)
                         robot_list[robot_index].set_goal((mouse_x, mouse_y))
@@ -150,7 +146,7 @@ def simulator_node():
                     robot_list[i].start()
                 started = True
         #Update screen
-        screen.fill((0,0,0))
+        screen.fill((255,255,255))
         space.step(1/steps)
         space.debug_draw(draw_options)
         #After getting starting locations
@@ -167,30 +163,32 @@ def simulator_node():
             #Stop if all robots reached
             if sum(robot_reached_list) == robot_index and robot_index != 0:
                 rospy.loginfo("LOG: All Robots Reached, Simulation Completed!")
-                rospy.loginfo("EXIT: Exiting simulation in 5s")
-                rospy.sleep(5)
-                rospy.set_param("/user/end_sim", 1)
-                sys.exit(0)
+                break
         #Step up
         pygame.display.flip()
-        #Publish raw image
         raw_image = conv2matrix(screen, space, draw_options)
+        #Publish raw image
         pub_raw.publish(bridge.cv2_to_imgmsg(raw_image, encoding="passthrough"))
         #Publish robot information
         pub_starts.publish(starts_multiarray)
         pub_goals.publish(goals_multiarray)
         pub_positions.publish(positions_multiarray)
         # pub_num.publish(len(robot_list))
-        rospy.set_param("/user/robot_num", len(robot_list))
+        rospy.set_param("/mopat/user/robot_num", len(robot_list))
         #Clear positions for next step
         positions_multiarray.data.clear()
         clock.tick(steps)
         # rospy.loginfo(clock.get_fps())
+    #End node
+    rospy.loginfo("EXIT: Exiting simulation")
+    rospy.sleep(5)
+    rospy.set_param("/mopat/user/end_sim", 1)
+    sys.exit(0)
 
 if __name__ == "__main__":
     try:
         simulator_node()
     except rospy.ROSInterruptException:
-        rospy.set_param("/user/end_sim", 1)
+        rospy.set_param("/mopat/user/end_sim", 1)
         sys.exit(0)
         pass

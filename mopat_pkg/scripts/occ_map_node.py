@@ -5,9 +5,9 @@
 '''
 This node generates the occupancy map given the raw image
 Subscribed topics:
-    mopat/tracking/raw_image         -   sensor_msgs/Image (BGR)
+    /mopat/testbed/raw_image         -   sensor_msgs/Image (BGR)
 Publised topics:
-    mopat/tracking/occ_map           -   sensor_msgs/Image (Bool)
+    /mopat/tracking/occ_map           -   sensor_msgs/Image (Bool)
 Work:
     Uses cv2 to threshold raw simulator image and converts to boolean obstacle map
 '''
@@ -53,27 +53,33 @@ def occ_map_node():
     rospy.init_node("occ_map_node")
     rospy.loginfo("INIT: Started Occupancy Map Generator node")
     #Subscribers and publishers
-    rospy.Subscriber("mopat/tracking/raw_image", Image, raw_image_cb)
-    pub = rospy.Publisher("mopat/tracking/occ_map", Image, queue_size=5)
-    #Set rate
+    rospy.Subscriber("/mopat/testbed/raw_image", Image, raw_image_cb)
+    pub = rospy.Publisher("/mopat/tracking/occ_map", Image, queue_size=5)
     rate = rospy.Rate(1)
     #Binarize!
     while not rospy.is_shutdown():
         #Always check if the simulation is ending
-        if rospy.get_param("/user/end_sim"):
-            rospy.loginfo("EXIT: Exiting Occupancy Map Generator node")
-            sys.exit(0)
+        if rospy.get_param("/mopat/user/end_sim"): break
         #Don't run until raw_image is found
         if got_raw_image:
             #Get occupancy map
-            _, occ_map = cv2.threshold(cv2.cvtColor(raw_image, cv2.COLOR_BGR2GRAY),
-                                       250, 255, cv2.THRESH_BINARY)
+            gray = cv2.cvtColor(raw_image, cv2.COLOR_BGR2GRAY)
+            blur = cv2.GaussianBlur(gray, (5,5), 0)
+            _, occ_map = cv2.threshold(blur, 100, 255, cv2.THRESH_BINARY_INV)
+            kernel = np.ones((10,10), np.uint8)
+            occ_map = cv2.morphologyEx(occ_map, cv2.MORPH_OPEN, kernel)
+            # cv2.imshow("gray", raw_image)
+            # cv2.imshow("/occ_map", occ_map)
             occ_map = occ_map.astype(bool)  #Necessary conversion
+            #Publish only possible in integer format
             pub.publish(bridge.cv2_to_imgmsg(occ_map.astype(np.uint8), encoding = "passthrough"))
-            #Sleep and get raw_image again
             got_raw_image = False           #Flip flag
-            rospy.sleep(10)
+            rospy.sleep(5)
+            # if cv2.waitKey(1) == ord('q'): break
         rate.sleep()
+    #Close the node
+    rospy.loginfo("EXIT: Exiting Occupancy Map Generator node")
+    sys.exit(0)
 
 if __name__ == "__main__":
     try:

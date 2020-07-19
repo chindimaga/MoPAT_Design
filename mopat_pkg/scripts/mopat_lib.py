@@ -18,7 +18,7 @@ import time
 from threading import Thread
 
 #Global variables
-x_size = rospy.get_param("/sim/screen_size")
+x_size = rospy.get_param("/mopat/sim/screen_size")
 screen_size = (x_size, x_size)
 colors = ["red", "blue", "brown", "lawngreen",
           "gold" , "violet","blueviolet", "orange",
@@ -45,7 +45,7 @@ def add_robot(space, pos, col):
     shape.color = pygame.color.THECOLORS[col]
     #Show heading side
     heading = pymunk.Circle(body, 5, offset = (10,0))
-    heading.color = pygame.color.THECOLORS["black"]
+    heading.color = pygame.color.THECOLORS["white"]
     #Add the object
     space.add(body, shape, heading)
     return shape
@@ -66,7 +66,7 @@ def add_static_obstacle(space, pos, size):
     if body.position[0] < 0 or body.position[1] < 0: return 0
     #Create box shape
     shape = pymunk.Poly.create_box(body, size, 0.0)
-    shape.color = pygame.color.THECOLORS["white"]
+    shape.color = pygame.color.THECOLORS["black"]
     #Add the object
     space.add(body, shape)
 
@@ -130,8 +130,8 @@ def conv2matrix(screen, space, draw_options):
     Returns:
         window_matrix   : numpy matrix of size screen_size
     '''
-    screen.fill((0,0,0))
-    space.debug_draw(draw_options)
+    # screen.fill((255,255,255))
+    # space.debug_draw(draw_options)
     window_matrix = np.array(pygame.surfarray.array3d(screen))
     window_matrix = window_matrix[..., ::-1]
     window_matrix = np.flip(np.rot90(window_matrix, 1),0)

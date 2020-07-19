@@ -5,9 +5,9 @@
 '''
 This node generates the configuration space for the given occ_map
 Subscribed topics:
-    mopat/tracking/occ_map               -   sensor_msgs/Image (Bool)
+    /mopat/tracking/occ_map               -   sensor_msgs/Image (Bool)
 Published topics:
-    mopat/tracking/static_config         -   sensor_msgs/Image (Bool)
+    /mopat/tracking/static_config         -   sensor_msgs/Image (Bool)
 Work:
     Gets the occupancy map and dilates it to get configuration space
 '''
@@ -59,16 +59,14 @@ def config_space_node():
     rospy.init_node("config_space_node")
     rospy.loginfo("INIT: Started Configuration Space Generator node")
     #Subscribers and publishers
-    rospy.Subscriber("mopat/tracking/occ_map", Image, occ_map_cb)
-    pub = rospy.Publisher("mopat/tracking/static_config", Image, queue_size=5)
+    rospy.Subscriber("/mopat/tracking/occ_map", Image, occ_map_cb)
+    pub = rospy.Publisher("/mopat/tracking/static_config", Image, queue_size=5)
     #Set rate
     rate = rospy.Rate(1)
     #Dilate!
     while not rospy.is_shutdown():
         #Always check if the simulation is ending
-        if rospy.get_param("/user/end_sim"):
-            rospy.loginfo("EXIT: Exiting Configuration Space Generator node")
-            sys.exit(0)
+        if rospy.get_param("/mopat/user/end_sim"): break
         #Don't generate until occ map is found
         if got_occ_map:
             #Get configuration space
@@ -78,6 +76,9 @@ def config_space_node():
             got_occ_map = False     #Flip flag
             rospy.sleep(5)
         rate.sleep()
+    #End node
+    rospy.loginfo("EXIT: Exiting Configuration Space Generator node")
+    sys.exit(0)
 
 if __name__ == "__main__":
     try:

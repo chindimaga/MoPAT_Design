@@ -5,12 +5,12 @@
 '''
 This node generates the motion plan for robots given starts and goals
 Subscribed topics:
-    mopat/tracking/static_config          -   sensor_msgs/Image (Bool)
-    mopat/robot/robot_starts              -   std_msgs/UInt32MultiArray
-    mopat/robot/robot_goals               -   std_msgs/UInt32MultiArray
+    /mopat/tracking/static_config          -   sensor_msgs/Image (Bool)
+    /mopat/robot/robot_starts              -   std_msgs/UInt32MultiArray
+    /mopat/robot/robot_goals               -   std_msgs/UInt32MultiArray
 Published topics:
-    mopat/control/motion_plan_{i}         -   std_msgs/UInt32MultiArrays
-    mopat/control/motion_plans_done       -   std_msgs/Bool
+    /mopat/control/motion_plan_{i}         -   std_msgs/UInt32MultiArrays
+    /mopat/control/motion_plans_done       -   std_msgs/Bool
 Work:
     Gets config_space, starts and goals and uses A* to get motion plans
 '''
@@ -135,23 +135,21 @@ def motion_planner_node():
     rospy.init_node("motion_planner_node")
     rospy.loginfo("INIT: Started A* Motion Plan Generator node")
     #Subscribers and publishers
-    rospy.Subscriber("mopat/control/discrete_config", Image, discrete_config_cb)
+    rospy.Subscriber("/mopat/control/discrete_config", Image, discrete_config_cb)
     # rospy.Subscriber("mopat/tracking/static_config", Image, config_space_cb)
-    rospy.Subscriber("mopat/robot/robot_starts", UInt32MultiArray, robot_starts_cb)
-    rospy.Subscriber("mopat/robot/robot_goals", UInt32MultiArray, robot_goals_cb)
-    pub_done = rospy.Publisher("mopat/control/motion_plans_done", Bool, queue_size = 1)
+    rospy.Subscriber("/mopat/robot/robot_starts", UInt32MultiArray, robot_starts_cb)
+    rospy.Subscriber("/mopat/robot/robot_goals", UInt32MultiArray, robot_goals_cb)
+    pub_done = rospy.Publisher("/mopat/control/motion_plans_done", Bool, queue_size = 1)
     #Get sampling size
-    samp_size = rospy.get_param("/control/sampling_size")
+    samp_size = rospy.get_param("/mopat/control/sampling_size")
     #Set rate
     rate = rospy.Rate(1)
     #Plan!
     while not rospy.is_shutdown():
         #Always check if the simulation is ending
-        if rospy.get_param("/user/end_sim"):
-            rospy.loginfo("EXIT: Exiting A* Motion Plan Generator node")
-            sys.exit(0)
+        if rospy.get_param("/mopat/user/end_sim"): break
         #Always check the number of robots
-        robot_num = rospy.get_param("/user/robot_num")
+        robot_num = rospy.get_param("/mopat/user/robot_num")
         #Don't start until all static config is found and planners aren't started
         if got_discrete_config and not all_planners_started:
             #Don't run if simulation hasn't started yet
@@ -163,7 +161,7 @@ def motion_planner_node():
                     robot_planners[i].set_params(robot_starts[i], robot_goals[i], screen_size)
                     #Start planners and publishers
                     robot_planners[i].start()
-                    robot_publishers[i] = rospy.Publisher("mopat/control/motion_plan_{0}".format(i),
+                    robot_publishers[i] = rospy.Publisher("/mopat/control/motion_plan_{0}".format(i),
                                                           UInt32MultiArray, queue_size=5)
                 all_planners_started = True     #Flip flag - after planners are started
         #Don't run until all planners are set
@@ -189,6 +187,9 @@ def motion_planner_node():
             continue
         pub_done.publish(motion_plans_done)     #Necessary evil
         rate.sleep()
+    #End node
+    rospy.loginfo("EXIT: Exiting A* Motion Plan Generator node")
+    sys.exit(0)
 
 if __name__ == "__main__":
     try:
