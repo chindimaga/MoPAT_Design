@@ -1,5 +1,5 @@
 #MoPAT Design Lab - NAME
-#Node name - Start Date
+#Node name(ROS2) - Start Date
 
 '''
 Node definition
@@ -15,16 +15,13 @@ Work:
 #ROS
 import rclpy
 from rclpy.node import Node
-#Messages
+#ROS Messages
 from std_msgs.msg import String
 #Others - optional
 import sys
 import time
 
 #MoPAT algorithm files - optional
-
-#Global variables
-msg = String()
 
 #Any other function
 def my_func(arg):
@@ -44,11 +41,14 @@ class our_node(Node):
         self.pub1 = self.create_publisher(String, 'topic_name', 2)  #(msg_type, topic_name, queue_size)
         #Create subscribers - need not create a variable
         self.create_subscription(String, 'topic_name', self.sub1_cb, 2) #(msg_type, topic_name, callback function, queue_size)
+        #Class variables
+        self.msg = String()
 
+    def run(self):
         #YOUR CODE HERE
-        msg.data = "Hello Bitches!"
+        self.msg.data = "Hello Bitches!"
         #Everytime you want to publish use
-        pub1.publish(msg)
+        pub1.publish(self.msg)
 
     #Callback functions
     def sub1_cb(self, msg):
@@ -59,12 +59,12 @@ class our_node(Node):
         '''
         print(msg.data)
 
-def main(args=None):
-    rclpy.init(args=args)
+def main():
+    rclpy.init()
     #Create object
     my_node = our_node()
     #Spin will keep repeating the node until exit
-    rclpy.spin(my_node)
+    rclpy.spin(my_node.run())
     #Close node
     my_node.destroy_node()
     rclpy.shutdown()
