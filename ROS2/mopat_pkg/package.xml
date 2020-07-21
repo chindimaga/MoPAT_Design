@@ -8,7 +8,7 @@
   <license>TODO: License declaration</license>
   <depend>python3-opencv</depend>
   <depend>python3-numpy</depend>
-  <exec_depend>cv2</exec_depend>
+  <depend>python3-scipy</depend>
 
   <export>
     <build_type>ament_python</build_type>

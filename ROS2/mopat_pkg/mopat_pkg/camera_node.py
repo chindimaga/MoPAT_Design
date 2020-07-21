@@ -16,7 +16,6 @@ from cv_bridge  import CvBridge
 #ROS messages
 from sensor_msgs.msg import Image
 #Others
-import sys
 import os
 import numpy as np
 import cv2
@@ -48,7 +47,7 @@ def main(args=None):
     rclpy.init()
     #Create and run
     create_node = camera_node()
-    create_node.run(0)
+    create_node.run(1)
     #Close node on exit
     create_node.destroy_node()
     rclpy.shutdown()
