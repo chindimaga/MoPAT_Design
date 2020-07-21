@@ -27,28 +27,28 @@ class camera_node(Node):
         super().__init__("camera_node")
         self.get_logger().info("INIT: Started camera node")
         self.pub = self.create_publisher(Image, "/mopat/testbed/raw_image", 2)
-    def run(self):
-        #Main code
-        #Create CV-ROS bridge
-        bridge = CvBridge()
+        #Class variables
+        self.bridge = CvBridge()    #CV-ROS bridge
+
+    def run(self, cam_index=0):
         #Start camera
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(cam_index)
         while 1:
             #Read frame and publish
             _, frame = cap.read()
-            self.pub.publish(bridge.cv2_to_imgmsg(frame.astype(np.uint8), encoding="passthrough"))
+            self.pub.publish(self.bridge.cv2_to_imgmsg(frame.astype(np.uint8), encoding="passthrough"))
             cv2.imshow("/mopat/testbed/raw_image", frame)
             if cv2.waitKey(1) == ord("q"): break
-        #Close cv
+        #Close cam
         cap.release()
         cv2.destroyAllWindows()
         self.get_logger().info("EXIT: Exiting camera node")
 
 def main(args=None):
-    rclpy.init(args=args)
+    rclpy.init()
     #Create and run
     create_node = camera_node()
-    rclpy.spin(create_node.run())
+    create_node.run(0)
     #Close node on exit
     create_node.destroy_node()
     rclpy.shutdown()

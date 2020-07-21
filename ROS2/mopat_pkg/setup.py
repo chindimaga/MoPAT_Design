@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             # 'simulator_node = mopat_pkg.simulator_node:main',
             'camera_node = mopat_pkg.camera_node:main',
+            'occ_map_node = mopat_pkg.occ_map_node:main',
         ],
     },
 )
