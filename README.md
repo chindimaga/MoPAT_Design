@@ -7,3 +7,11 @@
 3. Install all dependencies and build the packages
 4. Use ros2 launch mopat_pkg sim\_launch.py
 
+##### NOTE: To get logger output-
+1. Go to opt/ros/dashing/lib/python3.6/site-packages/launch/actions
+2. Open the file "execute process" as admin (sudo)
+3. Find "emulate\_tty=False" in the file and set it to "emulate\_tty=True"
+
+This would get the INFO logger output when using launch files
+
+Based on - https://github.com/ros2/launch/issues/188
