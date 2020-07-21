@@ -19,7 +19,7 @@ def generate_launch_description():
         ),
         Node(
             package="mopat_pkg",
-            node_namespace="/tracking",
+            node_namespace="/control",
             node_executable="config_space_node",
             node_name="cconfig_space_node",
             output="screen"

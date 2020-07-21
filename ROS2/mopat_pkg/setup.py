@@ -16,10 +16,12 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='otoshuki',
+    author='MoPAT Team',
+    author_email='guinig.pertin.iitg@gmail.com'
+    maintainer='MoPAT Team',
     maintainer_email='guining.pertin.iitg@gmail.com',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    description='ROS2 Package for MoPAT system',
+    license='TODO',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [

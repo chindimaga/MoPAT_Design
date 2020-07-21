@@ -29,7 +29,7 @@ class config_space_node(Node):
         super().__init__("config_space_node")
         self.get_logger().info("INIT: Started configuration space node")
         self.create_subscription(Image, "/mopat/tracking/occ_map", self.occ_map_cb, 2)
-        self.pub = self.create_publisher(Image, "/mopat/tracking/config_space", 2)
+        self.pub = self.create_publisher(Image, "/mopat/control/config_space", 2)
         #Class variables
         self.bridge = CvBridge()    #CV-ROS bridge
         self.rad = rad
