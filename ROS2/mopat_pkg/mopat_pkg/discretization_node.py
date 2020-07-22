@@ -26,7 +26,7 @@ class discretization_node(Node):
     def __init__(self, samp_size):
         #Initialize
         super().__init__("discretization_node")
-        self.get_logger().info("INIT: Started discretization node")
+        self.get_logger().info("INIT")
         self.create_subscription(Image, "/mopat/control/static_config", self.static_config_cb, 2)
         self.pub = self.create_publisher(Image, "/mopat/control/discrete_config", 2)
         #Class variables
@@ -57,7 +57,7 @@ def main(args=None):
     try:
         rclpy.spin(create_node)
     except KeyboardInterrupt:
-        create_node.get_logger().info("EXIT: Closing discretization node")
+        create_node.get_logger().info("EXIT")
         #Close node on exit
         create_node.destroy_node()
         rclpy.shutdown()

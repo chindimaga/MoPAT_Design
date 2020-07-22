@@ -34,4 +34,11 @@ def generate_launch_description():
                 {"samp_size" : "2"}
             ]
         ),
+        Node(
+            package="mopat_pkg",
+            node_namespace="/plot",
+            node_executable="plot_node",
+            node_name="plot_node",
+            output="screen",
+        ),
     ])

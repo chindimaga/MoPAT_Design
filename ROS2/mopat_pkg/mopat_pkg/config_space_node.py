@@ -26,7 +26,7 @@ class config_space_node(Node):
     def __init__(self, rad):
         #Initialize
         super().__init__("config_space_node")
-        self.get_logger().info("INIT: Started configuration space node")
+        self.get_logger().info("INIT")
         self.create_subscription(Image, "/mopat/tracking/occ_map", self.occ_map_cb, 2)
         self.pub = self.create_publisher(Image, "/mopat/control/static_config", 2)
         #Class variables
@@ -81,7 +81,7 @@ def main(args=None):
     try:
         rclpy.spin(create_node)
     except KeyboardInterrupt:
-        create_node.get_logger().info("EXIT: Closing configuration space node")
+        create_node.get_logger().info("EXIT")
         #Close node on exit
         create_node.destroy_node()
         rclpy.shutdown()

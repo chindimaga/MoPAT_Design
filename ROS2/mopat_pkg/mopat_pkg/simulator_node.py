@@ -33,7 +33,7 @@ class simulator_node(Node):
     def __init__(self):
         #Initialize
         super().__init__("simulator_node")
-        self.get_logger().info("INIT: Started simulator node")
+        self.get_logger().info("INIT")
         self.pub_raw = self.create_publisher(Image, "/mopat/testbed/raw_image", 2)
 
         #Class variables
@@ -103,7 +103,7 @@ class simulator_node(Node):
 
             #End
             self.clock.tick(self.steps)
-        self.get_logger().info("EXIT: Closing simulator node")
+        self.get_logger().info("EXIT")
 
     def conv2matrix(self):
         '''
@@ -152,8 +152,7 @@ def main():
     try:
         create_node.run()
     except KeyboardInterrupt:
-        create_node.set_parameters([Parameter("end_sim", Parameter.Type.BOOL, True)])
-        create_node.get_logger().info("EXIT: Closing simulator node")
+        create_node.get_logger().info("EXIT")
     #Close node on exit
     create_node.destroy_node()
     rclpy.shutdown()
