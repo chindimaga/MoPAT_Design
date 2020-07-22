@@ -6,7 +6,7 @@ This node generates the configuration space for the given occ_map
 Subscribed topics:
     /mopat/tracking/occ_map               -   sensor_msgs/Image (Bool)
 Published topics:
-    /mopat/tracking/static_config         -   sensor_msgs/Image (Bool)
+    /mopat/control/static_config         -   sensor_msgs/Image (Bool)
 Work:
     Gets the occupancy map and dilates it to get configuration space
 '''
@@ -19,7 +19,6 @@ from cv_bridge import CvBridge
 #ROS messages
 from sensor_msgs.msg import Image
 #Others
-import time
 import numpy as np
 from scipy import ndimage
 
@@ -29,7 +28,7 @@ class config_space_node(Node):
         super().__init__("config_space_node")
         self.get_logger().info("INIT: Started configuration space node")
         self.create_subscription(Image, "/mopat/tracking/occ_map", self.occ_map_cb, 2)
-        self.pub = self.create_publisher(Image, "/mopat/control/config_space", 2)
+        self.pub = self.create_publisher(Image, "/mopat/control/static_config", 2)
         #Class variables
         self.bridge = CvBridge()    #CV-ROS bridge
         self.rad = rad
@@ -79,10 +78,13 @@ def main(args=None):
     rclpy.init()
     #Create and run
     create_node = config_space_node(16)
-    rclpy.spin(create_node)
-    #Close node on exit
-    create_node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(create_node)
+    except KeyboardInterrupt:
+        create_node.get_logger().info("EXIT: Closing configuration space node")
+        #Close node on exit
+        create_node.destroy_node()
+        rclpy.shutdown()
 
 if __name__ == "__main__":
     main()

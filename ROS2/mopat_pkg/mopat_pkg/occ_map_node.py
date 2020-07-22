@@ -65,10 +65,13 @@ def main(args=None):
     rclpy.init()
     #Create and run
     create_node = occ_map_node()
-    rclpy.spin(create_node)
-    #Close node on exit
-    create_node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(create_node)
+    except KeyboardInterrupt:
+        create_node.get_logger().info("EXIT: Closing occupancy map node")
+        #Close node on exit
+        create_node.destroy_node()
+        rclpy.shutdown()
 
 if __name__ == "__main__":
     main()

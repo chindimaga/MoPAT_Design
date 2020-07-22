@@ -4,8 +4,9 @@
 # Running ROS2 package(still in development)
 1. Clone the repo, copy the ROS2/mopat_pkg to workspace/src
 2. Clone ros2-perception, specifically for CvBridge package. Steps - https://index.ros.org/p/cv_bridge/github-ros-perception-vision_opencv/#dashing
-3. Install all dependencies and build the packages
+3. Install all dependencies and build the packages using "colcon build --symlink-install"
 4. Use ros2 launch mopat_pkg sim\_launch.py
+
 
 ##### NOTE: To get logger output-
 1. Go to opt/ros/dashing/lib/python3.6/site-packages/launch/actions

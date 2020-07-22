@@ -41,16 +41,18 @@ class camera_node(Node):
         #Close cam
         cap.release()
         cv2.destroyAllWindows()
-        self.get_logger().info("EXIT: Exiting camera node")
 
 def main(args=None):
     rclpy.init()
     #Create and run
     create_node = camera_node()
-    create_node.run(1)
-    #Close node on exit
-    create_node.destroy_node()
-    rclpy.shutdown()
+    try:
+        create_node.run(1)
+    except KeyboardInterrupt:
+        create_node.get_logger().info("EXIT: Closing camera node")
+        #Close node on exit
+        create_node.destroy_node()
+        rclpy.shutdown()
 
 if __name__ == "__main__":
     main()
