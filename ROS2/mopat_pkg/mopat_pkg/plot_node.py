@@ -37,7 +37,6 @@ class plot_node(Node):
         #Class variables
         self.bridge = CvBridge()    #CV-ROS bridge
         self.got_occ_map = False
-        self.got_config_space = False
         self.fig = plt.figure()
         self.fig.add_axes([0,0,1,1])
         self.fig.axes[0].set_title("Occupancy Map + Configuration Space")
@@ -57,20 +56,18 @@ class plot_node(Node):
         Get configuration space
         '''
         self.config_space = self.bridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
-        self.got_config_space = True
         self.get_logger().info("LOG: Got static configuration space")
-        #Plot
-        self.run()
+        #Plot if occ_map is also found
+        if self.got_occ_map:
+            self.run()
 
     def run(self):
         '''
         Plot combined occ_map and config_space
         '''
-        #If got both occ_map and config_space
-        if self.got_occ_map and self.got_config_space:
-            self.plot_map = self.occ_map + self.config_space
-            self.fig.axes[0].matshow(self.plot_map)
-            self.fig.show()
+        self.plot_map = self.occ_map + self.config_space
+        self.fig.axes[0].matshow(self.plot_map)
+        self.fig.show()
 
 def main(args=None):
     rclpy.init()
