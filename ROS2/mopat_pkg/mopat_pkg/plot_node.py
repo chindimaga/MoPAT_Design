@@ -28,6 +28,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class plot_node(Node):
+    
     def __init__(self):
         #Initialize
         super().__init__("plot_node")

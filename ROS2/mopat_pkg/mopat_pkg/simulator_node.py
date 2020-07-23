@@ -29,6 +29,11 @@ from pygame.locals import *
 import pymunk
 from pymunk import pygame_util
 
+#Global variables
+colors = ["red", "blue", "brown", "lawngreen",
+          "gold" , "violet","blueviolet", "orange",
+          "gainsboro", "springgreen", "deeppink", "cyan"]
+
 class simulator_node(Node):
     def __init__(self):
         #Initialize
@@ -84,15 +89,50 @@ class simulator_node(Node):
                     mouse_x, mouse_y = pygame.mouse.get_pos()
                     mouse_y = self.screen_size[1] - mouse_y #Pygame pymunk conversion
                     self.got_mouse_click = True             #Flip flag
-                if (event.type == KEYDOWN) and (event.key == K_w) and not got_goals:
-                    rospy.loginfo("USER: Enter goals now")
-                    self.robot_index = 0                    #Reset index for goals
-                    goals_multiarray.data.clear()           #Clear data for goals
-                    self.got_starts = True                  #Flip flag
+                if (event.type == KEYDOWN) and (event.key == K_w) and not self.got_goals:
+                    self.get_logger().info("USER: Enter goals now")
+                    self.robot_index = 0                     #Reset index for goals
+                    self.robot_goals = {}                    #Clear data for goals
+                    self.got_starts = True                   #Flip flag
+
+            #Pre work before getting all goals
+            if not self.got_goals:
+                #If mouse click found - robot or goal
+                if self.got_mouse_click:
+                    #Robot
+                    if not self.got_starts:
+                        self.robot_list[self.robot_index] = self.add_robot((mouse_x, mouse_y), colors[self.robot_index])
+                        self.get_logger().info("LOG: Got Robot "+str(self.robot_index)+
+                              " Start: "+str(mouse_x)+"; "+str(mouse_y))
+                        self.robot_index += 1
+                    #Goals
+                    else:
+                        #Overlap check
+                        if self.raw_image[self.screen_size[1]-mouse_y, mouse_x][0] > 128:
+                            self.robot_goals[self.robot_index] = (mouse_x, mouse_y)
+                            self.get_logger().info("LOG: Got Robot "+str(self.robot_index)+
+                              " Goal: "+str(mouse_x)+"; "+str(mouse_y))
+                            self.robot_index += 1
+                            if self.robot_index >= len(self.robot_list):
+                                self.got_goals = True
+                                continue
+                        else:
+                            self.get_logger().info("USER: The point lies within an obstacle")
+                    self.got_mouse_click = False
+            #Start simulation if all goals found
+            else:
+                if not self.started:
+                    self.get_logger().info("LOG: Starting simulation....")
+                    self.started = True
             #Update screen
             self.screen.fill((255,255,255))
             self.space.step(1/self.steps)
             self.space.debug_draw(self.draw_options)
+            #After each starting location
+            if self.got_starts:
+                #Draw goal
+                for i in range(self.robot_index):
+                    self.draw_goal(self.robot_goals[i], i)
 
             #Step up
             pygame.display.flip()
@@ -144,6 +184,45 @@ class simulator_node(Node):
             for x in range(25):
                 if map_x[x]:
                     self.add_static_obstacle((25*x,25*y), obstacle_size)
+
+    def add_robot(self, pos, col):
+        '''
+        Function to generate bots
+        Arguments:
+            pos     :   Position to spawn vehicle
+            col     :   Color of the vehicle
+        '''
+        #Create robot main body
+        body = pymunk.Body(1, pymunk.moment_for_circle(1, 0, 15))
+        #Set body properties
+        body.position = pos
+        body.elasticity = 0
+        body.friction = 1
+        #Create shape/collision hull
+        shape = pymunk.Circle(body, 15)
+        shape.color = pygame.color.THECOLORS[col]
+        #Show heading side
+        heading = pymunk.Circle(body, 5, offset = (10,0))
+        heading.color = pygame.color.THECOLORS["white"]
+        #Add the object
+        self.space.add(body, shape, heading)
+        return body
+
+    def draw_goal(self, pos, index):
+        '''
+        Function to draw agent's goal position
+        Arguments:
+            pos     :   Postion to draw goal
+            index   :   Robot index
+        '''
+        pygame.draw.line(self.screen, pygame.color.THECOLORS[colors[index]],
+                         (pos[0]-10, self.screen_size[1]-pos[1]-10),
+                         (pos[0]+10, self.screen_size[1]-pos[1]+10),
+                         5)
+        pygame.draw.line(self.screen, pygame.color.THECOLORS[colors[index]],
+                         (pos[0]-10, self.screen_size[1]-pos[1]+10),
+                         (pos[0]+10, self.screen_size[1]-pos[1]-10),
+                         5)
 
 def main():
     rclpy.init()
