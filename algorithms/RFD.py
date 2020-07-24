@@ -4,7 +4,7 @@ import random
 import numpy as np
 
 
-class RFS:
+class RFD:
 
     def __init__(self, obmap, minx, miny, maxx, maxy,floor_height=500, num_drops=10):
         self.minx = minx
