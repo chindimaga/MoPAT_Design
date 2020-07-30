@@ -40,6 +40,8 @@ class simulator_node(Node):
         super().__init__("simulator_node")
         self.get_logger().info("INIT")
         self.pub_raw = self.create_publisher(Image, "/mopat/testbed/raw_image", 2)
+        self.pub_starts = self.create_publisher(UInt32MultiArray, "/mopat/robot/robot_starts", 2)
+        self.pub_goals = self.create_publisher(UInt32MultiArray, "/mopat/robot/robot_goals", 2)
 
         #Class variables
         self.goals_multiarray = UInt32MultiArray()      #Robot goals - UInt32MultiArray type rosmsg
@@ -57,6 +59,7 @@ class simulator_node(Node):
         self.robot_list = {}                            #Dict - robot_index : ith Robot object
         self.screen_size = (500,500)                    #Default screen_size - (int, int)
         self.end_sim = False                            #Flag - Default ros param to end sim
+
         #Game initialization
         os.environ['SDL_VIDEO_WINDOW_POS'] = "+0,+50"
         pygame.init()
@@ -65,6 +68,7 @@ class simulator_node(Node):
         self.draw_options = pymunk.pygame_util.DrawOptions(self.screen)
         self.clock = pygame.time.Clock()
         self.space = pymunk.Space()
+
         #Create map
         self.generate_random_map()
 
@@ -93,6 +97,7 @@ class simulator_node(Node):
                     self.get_logger().info("USER: Enter goals now")
                     self.robot_index = 0                     #Reset index for goals
                     self.robot_goals = {}                    #Clear data for goals
+                    self.goals_multiarray.data = []
                     self.got_starts = True                   #Flip flag
 
             #Pre work before getting all goals
@@ -104,12 +109,16 @@ class simulator_node(Node):
                         self.robot_list[self.robot_index] = self.add_robot((mouse_x, mouse_y), colors[self.robot_index])
                         self.get_logger().info("LOG: Got Robot "+str(self.robot_index)+
                               " Start: "+str(mouse_x)+"; "+str(mouse_y))
+                        self.starts_multiarray.data.append(mouse_x)
+                        self.starts_multiarray.data.append(mouse_y)
                         self.robot_index += 1
                     #Goals
                     else:
                         #Overlap check
                         if self.raw_image[self.screen_size[1]-mouse_y, mouse_x][0] > 128:
                             self.robot_goals[self.robot_index] = (mouse_x, mouse_y)
+                            self.goals_multiarray.data.append(mouse_x)
+                            self.goals_multiarray.data.append(mouse_y)
                             self.get_logger().info("LOG: Got Robot "+str(self.robot_index)+
                               " Goal: "+str(mouse_x)+"; "+str(mouse_y))
                             self.robot_index += 1
@@ -140,7 +149,9 @@ class simulator_node(Node):
             #1. Raw image
             self.conv2matrix()
             self.pub_raw.publish(self.bridge.cv2_to_imgmsg(self.raw_image, encoding="passthrough"))
-
+            #2. Start and goal localtion
+            self.pub_goals.publish(self.goals_multiarray)
+            self.pub_starts.publish(self.starts_multiarray)
             #End
             self.clock.tick(self.steps)
         self.get_logger().info("EXIT")
