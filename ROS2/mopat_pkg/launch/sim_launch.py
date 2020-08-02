@@ -36,6 +36,13 @@ def generate_launch_description():
         ),
         Node(
             package="mopat_pkg",
+            node_namespace="/control",
+            node_executable="motion_planning_node",
+            node_name="motion_planning_node",
+            output="screen",
+        ),
+        Node(
+            package="mopat_pkg",
             node_namespace="/plot",
             node_executable="plot_node",
             node_name="plot_node",

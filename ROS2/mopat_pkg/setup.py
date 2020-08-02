@@ -30,7 +30,8 @@ setup(
             'occ_map_node = mopat_pkg.occ_map_node:main',
             'config_space_node = mopat_pkg.config_space_node:main',
             'discretization_node = mopat_pkg.discretization_node:main',
-            'plot_node = mopat_pkg.plot_node:main'
+            'plot_node = mopat_pkg.plot_node:main',
+            'motion_planning_node = mopat_pkg.motion_planner_node:main'
         ],
     },
 )
