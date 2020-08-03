@@ -82,9 +82,10 @@ class Astar(Thread):
 
         self.px, self.py = self.calc_final_path(goal_node, Visited)
         if self.path :
+            print("Done!")
         else:
-            self.px = [0]
-            self.py = [0]
+            self.px = [99999]
+            self.py = [99999]
         self.plan_done = True
 
     def calc_hvalue(self, node, goal):
@@ -125,3 +126,6 @@ class Astar(Thread):
                   [1, -1, math.sqrt(2)],
                   [1, 1, math.sqrt(2)]]
         return motion
+
+def main():
+    print("Using the mopat_astar_ros module")

@@ -42,11 +42,12 @@ class simulator_node(Node):
         self.pub_raw = self.create_publisher(Image, "/mopat/testbed/raw_image", 2)
         self.pub_starts = self.create_publisher(UInt32MultiArray, "/mopat/robot/robot_starts", 2)
         self.pub_goals = self.create_publisher(UInt32MultiArray, "/mopat/robot/robot_goals", 2)
-
+        self.pub_num = self.create_publisher(UInt32, "/mopat/robot/robot_num", 2)
         #Class variables
         self.goals_multiarray = UInt32MultiArray()      #Robot goals - UInt32MultiArray type rosmsg
         self.positions_multiarray = UInt32MultiArray()  #Robot positions - UInt32MultiArray type rosmsg
         self.starts_multiarray = UInt32MultiArray()     #Robot starts - UInt32MultiArray type rosmsg
+        self.robot_num = UInt32()
         self.robot_starts = {}                          #Dict - robot_index : robot start
         self.robot_goals = {}                           #Dict - robot_index : robot goal
         self.steps = 50                                 #Simulation steps
@@ -152,6 +153,8 @@ class simulator_node(Node):
             #2. Start and goal localtion
             self.pub_goals.publish(self.goals_multiarray)
             self.pub_starts.publish(self.starts_multiarray)
+            self.robot_num.data = len(self.robot_list)
+            self.pub_num.publish(self.robot_num)
             #End
             self.clock.tick(self.steps)
         self.get_logger().info("EXIT")
