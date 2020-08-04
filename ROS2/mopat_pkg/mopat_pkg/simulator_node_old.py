@@ -35,7 +35,6 @@ colors = ["red", "blue", "brown", "lawngreen",
           "gold" , "violet","blueviolet", "orange",
           "gainsboro", "springgreen", "deeppink", "cyan"]
 
-
 class simulator_node(Node):
     def __init__(self):
         #Initialize
@@ -73,12 +72,6 @@ class simulator_node(Node):
         self.space = pymunk.Space()
         #Create map
         self.generate_random_map()
-        #Get the simulator running in a way that the node can still receive messages
-        #Run the simulator on a different thread while this nodes gets locked in spin
-        run_thread = Thread(target=self.run)
-        run_thread.daemon = True
-        run_thread.start()
-        #Get stuck in spin after this
 
     def run(self):
         '''
@@ -120,11 +113,10 @@ class simulator_node(Node):
                               " Start: "+str(mouse_x)+"; "+str(mouse_y))
                         self.starts_multiarray.data.append(mouse_x)
                         self.starts_multiarray.data.append(mouse_y)
-                        subs = self.create_subscription(UInt32MultiArray,
+                        self.create_subscription(UInt32MultiArray,
                                                 "/mopat/control/motion_plan_{0}".format(self.robot_index),
                                                 # self.robot_list[self.robot_index].motion_plan_cb, 2)
                                                 self.get_cb, 2)
-                        subs
                         self.robot_index += 1
                     #Goals
                     else:
@@ -197,6 +189,9 @@ class simulator_node(Node):
         #Add the object
         self.space.add(body, shape)
 
+    def get_cb(self, msg):
+        self.get_logger().info("BAS YAHI HONA THA")
+
     def generate_random_map(self):
         '''
         Function to generate a random map for simulation
@@ -214,9 +209,6 @@ class simulator_node(Node):
             for x in range(25):
                 if map_x[x]:
                     self.add_static_obstacle((25*x,25*y), obstacle_size)
-
-    def get_cb(self, msg):
-        self.get_logger().info("BAS YAHI HONA THA")
 
     def draw_goal(self, pos, index):
         '''
@@ -363,6 +355,9 @@ def main():
     rclpy.init()
     #Create and run
     create_node = simulator_node()
+    run_thread = Thread(target=create_node.run)
+    run_thread.daemon = True
+    run_thread.start()
     try:
         # create_node.get_logger().info("YEH ANDAR AAYA MAIN")
         rclpy.spin(create_node)

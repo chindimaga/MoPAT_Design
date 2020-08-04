@@ -26,7 +26,7 @@ setup(
     entry_points={
         'console_scripts': [
             'simulator_node = mopat_pkg.simulator_node:main',
-            # 'camera_node = mopat_pkg.camera_node:main',
+            'camera_node = mopat_pkg.camera_node:main',
             'occ_map_node = mopat_pkg.occ_map_node:main',
             'config_space_node = mopat_pkg.config_space_node:main',
             'discretization_node = mopat_pkg.discretization_node:main',

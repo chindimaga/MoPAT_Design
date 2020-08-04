@@ -84,8 +84,8 @@ class Astar(Thread):
         if self.path :
             print("Done!")
         else:
-            self.px = [99999]
-            self.py = [99999]
+            self.px = [9999]
+            self.py = [9999]
         self.plan_done = True
 
     def calc_hvalue(self, node, goal):
