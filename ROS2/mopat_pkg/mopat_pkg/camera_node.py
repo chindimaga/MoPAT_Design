@@ -47,7 +47,7 @@ def main(args=None):
     #Create and run
     create_node = camera_node()
     try:
-        create_node.run(1)
+        create_node.run(0)
     except KeyboardInterrupt:
         create_node.get_logger().info("EXIT")
         #Close node on exit
