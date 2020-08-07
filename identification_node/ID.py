@@ -52,6 +52,7 @@ def ID(robot_list) :
     ID_list= robot_pos.keys()
     if ( code_bit_flag != code_bit_flag_check ):
         rotate_robot_code()
+        code_bit_flag_check= code_bit_flag
 
     for i in ID_list:
         robot_code[-1][i] = robot_code[0][i]
