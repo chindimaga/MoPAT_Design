@@ -5,9 +5,9 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package="mopat_pkg",
-            node_namespace="/simulator",
-            node_executable="simulator_node",
-            node_name="simulator_node",
+            node_namespace="/testbed",
+            node_executable="camera_node",
+            node_name="camera_node",
             output="screen",
         ),
         Node(
@@ -41,11 +41,4 @@ def generate_launch_description():
             node_name="motion_planning_node",
             output="screen",
         ),
-        # Node(
-        #     package="mopat_pkg",
-        #     node_namespace="/plot",
-        #     node_executable="plot_node",
-        #     node_name="plot_node",
-        #     output="screen",
-        # ),
     ])
