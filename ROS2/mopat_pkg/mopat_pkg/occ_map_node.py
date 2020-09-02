@@ -27,7 +27,7 @@ class occ_map_node(Node):
     def __init__(self):
         #Initialize
         super().__init__("occ_map_node")
-        self.get_logger().info("INIT: Started occupancy map node")
+        self.get_logger().info("INIT")
         self.create_subscription(Image, "/mopat/testbed/raw_image", self.raw_image_cb, 2)
         self.pub = self.create_publisher(Image, "/mopat/tracking/occ_map", 2)
         #Class variables
@@ -65,10 +65,13 @@ def main(args=None):
     rclpy.init()
     #Create and run
     create_node = occ_map_node()
-    rclpy.spin(create_node)
-    #Close node on exit
-    create_node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(create_node)
+    except KeyboardInterrupt:
+        create_node.get_logger().info("EXIT")
+        #Close node on exit
+        create_node.destroy_node()
+        rclpy.shutdown()
 
 if __name__ == "__main__":
     main()
