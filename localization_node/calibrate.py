@@ -56,10 +56,10 @@ def calibrate():
         uh_b = cv2.getTrackbarPos("UH_B", "Tuning for Blue Mask")
         us_b = cv2.getTrackbarPos("US_B", "Tuning for Blue Mask")
         uv_b = cv2.getTrackbarPos("UV_B", "Tuning for Blue Mask")
- 
+
         l_b= np.array([lh_b, ls_b, lv_b])
         u_b= np.array([uh_b, us_b, uv_b])
- 
+
         mask = cv2.inRange(hsv, l_b, u_b)              # mask created using threshold values
         res= cv2.bitwise_and(frame, frame, mask=mask)
 
@@ -146,6 +146,3 @@ def calibrate():
     cv2.destroyAllWindows()
     file.seek(0,0)
     file.writelines([str(lh_b)+"\n", str(ls_b)+"\n", str(lv_b)+"\n", str(uh_b)+"\n", str(us_b)+"\n", str(uv_b)+"\n", str(lh_g)+"\n", str(ls_g)+"\n", str(lv_g)+"\n", str(uh_g)+"\n", str(us_g)+"\n", str(uv_g)+"\n", str(lh_r)+"\n", str(ls_r)+"\n", str(lv_r)+"\n", str(uh_r)+"\n", str(us_r)+"\n", str(uv_r)])
-
-
-
