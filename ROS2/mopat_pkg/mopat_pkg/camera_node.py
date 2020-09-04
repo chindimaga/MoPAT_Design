@@ -51,8 +51,7 @@ class camera_node(Node):
         '''
         #Start camera
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        print(dir_path)
-        frame = cv2.imread(dir_path+'/test.png')
+        frame = cv2.imread(dir_path+'/data/test.png')
         while 1:
             #Read frame and publish
             self.pub.publish(self.bridge.cv2_to_imgmsg(frame.astype(np.uint8), encoding="passthrough"))

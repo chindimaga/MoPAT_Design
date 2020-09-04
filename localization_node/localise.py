@@ -83,9 +83,5 @@ def localise ( LED_list ):
         LED_list.remove(LED_list[0])
         LED_list.remove(LED_list[i1])
         LED_list.remove(LED_list[i2])
-        
+
     return robot_list
-
-
-
-

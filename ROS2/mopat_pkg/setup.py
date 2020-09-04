@@ -13,7 +13,8 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name), glob('launch/*_launch.py')),
-        ('lib/'+package_name, [package_name+'/test.png'])
+        ('lib/'+package_name, [package_name+'/data/mask_parameters']),
+        ('lib/'+package_name, [package_name+'/data/test.png']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -28,12 +29,16 @@ setup(
         'console_scripts': [
             'simulator_node = mopat_pkg.simulator_node:main',
             'camera_node = mopat_pkg.camera_node:main',
+            'localization_node = mopat_pkg.localization_node:main',
             'occ_map_node = mopat_pkg.occ_map_node:main',
             'config_space_node = mopat_pkg.config_space_node:main',
             'discretization_node = mopat_pkg.discretization_node:main',
             'plot_node = mopat_pkg.plot_node:main',
             'motion_planning_node = mopat_pkg.motion_planner_node:main',
-            'mopat_astar_ros = mopat_pkg.mopat_astar_ros:main'
+            'mopat_astar_ros = mopat_pkg.mopat_astar_ros:main',
+            'blob_detector = mopat_pkg.blob_detector:main',
+            'localize = mopat_pkg.localize:main',
+            'import_mask_params = mopat_pkg.import_mask_params:main'
         ],
     },
 )
