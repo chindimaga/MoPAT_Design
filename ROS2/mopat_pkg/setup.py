@@ -48,6 +48,7 @@ setup(
             'discretization_node = mopat_pkg.discretization_node:main',
             'plot_node = mopat_pkg.plot_node:main',
             'motion_planning_node = mopat_pkg.motion_planner_node:main',
+            'stream_node = mopat_pkg.stream_node:main',
         ],
     },
 )

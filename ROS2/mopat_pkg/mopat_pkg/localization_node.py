@@ -1,4 +1,4 @@
-#MoPAT Design Lab - Guining Pertin
+#MoPAT Design Lab - S Rishi, Guining Pertin
 #Camera output node(ROS2) - 04-09-20
 
 '''

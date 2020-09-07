@@ -26,6 +26,13 @@ def generate_launch_description():
         ),
         Node(
             package="mopat_pkg",
+            node_namespace="/server",
+            node_executable="stream_node",
+            node_name="stream_node",
+            output="screen",
+        ),
+        Node(
+            package="mopat_pkg",
             node_namespace="/control",
             node_executable="config_space_node",
             node_name="config_space_node",
