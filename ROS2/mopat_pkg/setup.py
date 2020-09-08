@@ -20,6 +20,7 @@ setup(
         ('lib/'+package_name+'/algorithms', [package_name+'/algorithms/localize.py']),
         ('lib/'+package_name+'/algorithms', [package_name+'/algorithms/import_mask_params.py']),
         ('lib/'+package_name+'/algorithms', [package_name+'/algorithms/videocap.py']),
+        ('lib/'+package_name+'/algorithms', [package_name+'/algorithms/mopat_lib.py']),
         ('lib/'+package_name+'/static', [package_name+'/static/bootstrap.min.css']),
         ('lib/'+package_name+'/static', [package_name+'/static/bootstrap.min.js']),
         ('lib/'+package_name+'/static', [package_name+'/static/jquery.js']),
@@ -40,7 +41,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'simulator_node = mopat_pkg.simulator_node:main',
+            'simulator_node = mopat_pkg.simulator_node_new:main',
             'camera_node = mopat_pkg.camera_node:main',
             'localization_node = mopat_pkg.localization_node:main',
             'occ_map_node = mopat_pkg.occ_map_node:main',
