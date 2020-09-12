@@ -1,4 +1,4 @@
-#MoPAT Design Lab - Guining Pertin
+#MoPAT Design Lab - S Rishi, Guining Pertin
 #Camera output node(ROS2) - 04-09-20
 
 '''
@@ -24,9 +24,9 @@ import numpy as np
 import cv2
 import time
 #MoPAT
-from mopat_pkg.detect_blob import detect_blob
-from mopat_pkg.import_mask_params import import_mask_params
-from mopat_pkg.localize import localize
+from algorithms.detect_blob import detect_blob
+from algorithms.import_mask_params import import_mask_params
+from algorithms.localize import localize
 
 class localization_node(Node):
     def __init__(self):

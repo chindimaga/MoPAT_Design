@@ -28,7 +28,7 @@ from std_msgs.msg import UInt32MultiArray, UInt32, Bool
 import numpy as np
 import time
 from threading import Thread
-from mopat_pkg.mopat_astar_ros import Astar
+from algorithms.mopat_astar_ros import Astar
 
 class motion_planner_node(Node):
     def __init__(self):

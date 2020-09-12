@@ -35,6 +35,7 @@ colors = ["red", "blue", "brown", "lawngreen",
           "gold" , "violet","blueviolet", "orange",
           "gainsboro", "springgreen", "deeppink", "cyan"]
 
+create_node = None
 
 class simulator_node(Node):
     def __init__(self):
@@ -358,14 +359,25 @@ class Robot(Thread):
         #Otherwise, start controller
         self.basic_robot_controller()
 
+def keep_it_spinning():
+    global create_node
+    rclpy.spin(create_node)
+
 def main():
     global create_node
     rclpy.init()
     #Create and run
     create_node = simulator_node()
+    # run_thread = Thread(target=create_node.run)
+    # run_thread.daemon = True
+    # run_thread.start()
+    spin_thread = Thread(target=keep_it_spinning)
+    spin_thread.daemon = True
     try:
         # create_node.get_logger().info("YEH ANDAR AAYA MAIN")
-        rclpy.spin(create_node)
+        # rclpy.spin(create_node)
+        spin_thread.start()
+        create_node.run()
     except KeyboardInterrupt:
         create_node.get_logger().info("EXIT")
         #Close node on exit
