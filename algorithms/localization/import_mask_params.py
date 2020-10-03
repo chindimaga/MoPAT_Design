@@ -1,10 +1,12 @@
 import cv2
 import numpy as np
+import os
 
 def import_mask_params() :
 
     # importing mask parameters
-    file = open(r"mask parameters", "r+")
+    dir = os.path.dirname(os.path.realpath(__file__))
+    file = open(dir+"/data/mask_parameters", "r+")
     param_list = file.readlines()
 
     lh_b = int(param_list[0])

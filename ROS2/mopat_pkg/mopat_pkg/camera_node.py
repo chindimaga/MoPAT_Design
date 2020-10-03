@@ -30,6 +30,9 @@ class camera_node(Node):
         self.bridge = CvBridge()    #CV-ROS bridge
 
     def run(self, cam_index=0):
+        '''
+        Function to get raw_image
+        '''
         #Start camera
         cap = cv2.VideoCapture(cam_index)
         while 1:
@@ -42,12 +45,27 @@ class camera_node(Node):
         cap.release()
         cv2.destroyAllWindows()
 
+    def test(self):
+        '''
+        Function to test through test image file
+        '''
+        #Start camera
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        frame = cv2.imread(dir_path+'/data/test.png')
+        while 1:
+            #Read frame and publish
+            self.pub.publish(self.bridge.cv2_to_imgmsg(frame.astype(np.uint8), encoding="passthrough"))
+            cv2.imshow("/mopat/testbed/raw_image", frame)
+            if cv2.waitKey(1) == ord("q"): break
+        #Close cam
+        cv2.destroyAllWindows()
+
 def main(args=None):
     rclpy.init()
     #Create and run
     create_node = camera_node()
     try:
-        create_node.run(0)
+        create_node.test()
     except KeyboardInterrupt:
         create_node.get_logger().info("EXIT")
         #Close node on exit

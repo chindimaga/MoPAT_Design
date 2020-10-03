@@ -13,8 +13,22 @@ def generate_launch_description():
         Node(
             package="mopat_pkg",
             node_namespace="/tracking",
+            node_executable="localization_node",
+            node_name="localization_node",
+            output="screen",
+        ),
+        Node(
+            package="mopat_pkg",
+            node_namespace="/tracking",
             node_executable="occ_map_node",
             node_name="occ_map_node",
+            output="screen",
+        ),
+        Node(
+            package="mopat_pkg",
+            node_namespace="/server",
+            node_executable="stream_node",
+            node_name="stream_node",
             output="screen",
         ),
         Node(

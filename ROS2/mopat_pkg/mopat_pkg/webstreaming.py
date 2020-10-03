@@ -2,7 +2,7 @@
 # python webstreaming.py --ip 0.0.0.0 --port 8000
 
 # import the necessary packages
-from streamplay.videostream import VideoStream
+from algorithms.videocap import VideoStream
 from flask import Response
 from flask import Flask
 from flask import render_template
